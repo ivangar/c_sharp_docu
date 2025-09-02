@@ -645,7 +645,11 @@ public record Person(string FirstName, string LastName)
 }
 
 
-                                                            /* File Processing */
+
+
+/********************************************************************
+ *                            File Processing                        *
+ ********************************************************************/
 
 
 //using yield it doesn't load the whole file into memory.
@@ -666,7 +670,25 @@ File.WriteAllText(path, "This is a test file.");
 string content = File.ReadAllText(path);
 
 
-                                                                /* Enums */
+//File input using StreamWriter
+try
+{
+    using (var sw = new StreamWriter("./test.txt"))
+    {
+        sw.WriteLine("Hello");
+    }
+}
+// Put the more specific exceptions first.
+catch (DirectoryNotFoundException ex)
+{
+    Console.WriteLine(ex);
+}
+
+
+
+/********************************************************************
+ *                                  Enums                           *
+ ********************************************************************/
 
 
 public enum TransactionType {
