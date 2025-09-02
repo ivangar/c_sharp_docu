@@ -35,6 +35,7 @@ var myStr = "test";
  ********************************************************************/
 
 
+
 var str = "";
 var str = String.Empty; //usually when return expects a string
 string? str;
