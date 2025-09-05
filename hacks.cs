@@ -727,3 +727,22 @@ public struct Coords
         y = p2;
     }
 }
+
+
+
+/********************************************************************
+ *                    file -based C# programs                        *
+ ********************************************************************/
+
+
+//Command to run a file based program
+//dotnet run AsciiArt.cs
+
+//Read command line arguments
+//dotnet run AsciiArt.cs -- This is the command line.
+
+if (args.Length > 0)
+{
+    string message = string.Join(' ', args);
+    Console.WriteLine(message);
+}
