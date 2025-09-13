@@ -10,24 +10,44 @@ byte number = 255;
 string firstName = "John";
 Console.WriteLine("{0} {1}", number, firstName);
 Console.WriteLine($"String interpolation {number} {firstName}"); //string interpolation for concat
+Console.Error.WriteLine("Error Message"); //Log errors in console
 
-                                                /* Numbers */
-                                                
+//String Interpolation + Concatenation
+Console.WriteLine(
+    $"Congratulations {account.OwnerName}, " +
+    $"you have created your first account with a balance of {account.Balance}. " +
+    $"Your BankAccountId is {account.BankAccountId}.");
+
+
+/********************************************************************
+ *                               Numbers                            *
+ ********************************************************************/
+
+
 float f = 1.0f / 3;       // ~0.3333333 Fast calculations with less precision
 double d = 1.0 / 3;       // ~0.333333333333333 precision matters but not to the level of financial accuracy
 decimal m = 1.0M / 3;     // Financial and monetary calculations with high precision
-
-                                                /* Vars/Const */
 
 const float Pi = 3.14F;  //constant use Pascal Case
 const int MaxZoom = 5;
 decimal number = 1.2M;
 byte number = 255;
-string firstName = "John";
-char character = 'a';
-
 var myVar = 10;
-var myStr = "test";
+
+//Generating random numbers
+Random random = new();
+int randomNumber = random.Next(100000, 999999); // 6-digit random ID
+
+//Math library
+Math.Max(a, b);
+
+//format a decimal (or double) as currency with standard numeric format s-trings
+decimal balance = 1234.56m;
+Console.WriteLine(balance.ToString("C", CultureInfo.GetCultureInfo("en-CA")));
+Console.WriteLine(balance.ToString("C", CultureInfo.CurrentCulture));
+
+
+
 
 
 /********************************************************************
@@ -36,6 +56,8 @@ var myStr = "test";
 
 
 
+char character = 'a';
+string firstName = "John";
 var str = "";
 var str = String.Empty; //usually when return expects a string
 string? str;
@@ -62,11 +84,26 @@ public int WordCount() => str.Split([' ', '.', '?'], StringSplitOptions.RemoveEm
 
 //using the == operator to test that two string values are equal
 var product = "computer";
-if(product == "computer")
-    //do something
+if (product == "computer")
+    { /*do something*/ }
     
+    
+//Case-insensitive comparison:
+if (string.Equals(product, "Initial Balance", StringComparison.OrdinalIgnoreCase))
+  { /*do something*/ }
+if (product.Equals("Initial Balance", StringComparison.OrdinalIgnoreCase))
+  { /*do something*/ }
+
+
+//String Interpolation Format Specifiers
+//$"{variable:format_specifier}";
+decimal amount = 123.45m;
+Console.Write($"{amount:C}");// Currency: $1,234.57
+Console.Write($"{amount:C2}");// Currency with 2 decimals: $1,234.57
+Console.Write($"{amount:N}");// Number with separators: 1,234.57
+
 //using the 'is' operator
-var product = "computer";
+    var product = "computer";
 if(product is "computer")
     //do something
 
@@ -74,6 +111,8 @@ if(product is "computer")
 StringBuilder builder = new();
 builder.AppendLine("The following arguments are passed:");
 Console.WriteLine(builder.ToString());
+
+
 
 
 /********************************************************************
@@ -101,10 +140,17 @@ var checkedVar = checked(Pi + number);
 
 
 
+
+
 /********************************************************************
  *                             Classes & Objects                    *
  ********************************************************************/
 
+/*
+* Block-Scoped (Traditional) Namespace:         namespace Name { ... }
+* File-Scoped Namespace Declaration (C# 10+)    namespace Name;   
+* You can even use nested namespaces:           namespace MyApp.Services.Payments;                    
+*/
 
 var person = new Person()
                 {
@@ -140,6 +186,19 @@ public class Person(string firstName, string lastName, MyCar car)
     }
 
     public string Name { get; set; } //Auto-Implemented Property with get/set accessors
+
+    //dynamically defining get accessor
+    public decimal Amount
+    {
+        get
+        {
+            decimal sum = 0;
+            foreach (var transaction in _transactions)
+                sum += transaction.Amount;
+
+            return sum;
+        }
+    }
 }
 
 public class MyCar(){};
@@ -219,6 +278,7 @@ return 1;
 
 
 
+
 /********************************************************************
  *                                Arrays                            *
  ********************************************************************/
@@ -275,10 +335,10 @@ var list1 = new List<string>();  // ✅ var with full type
 List<string> list2 = new();          // ✅ target-typed new (C# 9.0+)
 List<string> list3 = new List<string>(); // ✅ traditional style, not used a lot anymore.
 
+List<string> emptyArray = []; //declaring an empty array of string (C# 12+)
 
 var names = new List<string> { "Alice", "Bob", "Charlie", "David" };  //collection initializer syntax.
 List<string> names = ["Alice", "Bob", "Charlie", "David"];  //(new) collection expressions C# 12+
-
 
 List<string> names = new() { "A", "B", "C" };
 
@@ -286,6 +346,8 @@ Console.WriteLine($"My name is {names[0]}.");
 
 names.Add("Gonzo");
 names.Remove("Alice");
+names.AddRange(["John", "Sylvia", "Denis"]);
+
 var countListItems = names.Count; //Count is a property for lists, different for Count() for iterable collections
 names.Sort();
 
@@ -369,10 +431,17 @@ IEnumerable<Node> Traverse(Node node)
 }
 
 
-                                                    /* Dates */
+
+/********************************************************************
+ *                                Dates                          *
+ ********************************************************************/
 
 var myDate = new DateTime(1989, 5, 10);
+DateTime date = DateTime.Now;
 
+Console.Write($"{date:yyyy-MM-dd}"); // 2025-09-13
+Console.Write($"{date:MMM dd, yyyy}"); // Sep 13, 2025
+Console.Write($"{date:HH:mm:ss}"); // 14:30:25
 
 
 
@@ -614,7 +683,7 @@ public record struct Point(int X, int Y)
 }
 
 var point1 = new Point(5,10);
-Point point1 = new(5, 10);//object initializer syntax
+Point point1 = new(5, 10);//object initializer syntax, can be returned from a method : return new(5, 10);
 
 //this should print New point : Point { X = 5, Y = 10 }
 Console.WriteLine($" New point : {point1}");
@@ -648,7 +717,7 @@ public record Person(string FirstName, string LastName)
 
 
 /********************************************************************
- *                            File Processing                        *
+ *                            Files Processing                        *
  ********************************************************************/
 
 
@@ -707,9 +776,6 @@ public enum FileMode
     Append = 6,
 }
 
-                                                            /* Math library */
-
-Math.Max(a, b);
 
 
 /********************************************************************
@@ -736,6 +802,7 @@ public struct Coords
 
 
 //Command to run a file based program
+//dotnet buuild AsciiArt.cs (optional run command will first build and compile)
 //dotnet run AsciiArt.cs
 
 //Read command line arguments
@@ -746,3 +813,5 @@ if (args.Length > 0)
     string message = string.Join(' ', args);
     Console.WriteLine(message);
 }
+
+//dotnet run -- input.txt --mode fast --verbose
