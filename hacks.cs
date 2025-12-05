@@ -129,6 +129,7 @@ decimal amount = 123.45m;
 Console.Write($"{amount:C}");// Currency: $1,234.57
 Console.Write($"{amount:C2}");// Currency with 2 decimals: $1,234.57
 Console.Write($"{amount:N}");// Number with separators: 1,234.57
+Console.Write($"{12345:#,0}");// will print 12,345
 
 //using the 'is' operator
 var computer = "computer";
@@ -153,19 +154,19 @@ string s = "1";
 int i = Convert.ToInt32(s);
 bool b = Convert.ToBoolean(s);
 int j = int.Parse(s);
-long num = long.Parse(s);
-long num = Convert.ToInt64(s);
+long parsedNum = long.Parse(s);
+long longNum = Convert.ToInt64(s);
 
 //always better to use TryParse, which returns true/false in case the argument is not a valid number
-var result = int.TryParse(s, out int number);
-var result = double.TryParse(s, out double number);
-var longResult = ulong.TryParse(s, out ulong longResult);
+var intParse = int.TryParse(s, out int _);
+var doubleParsed = double.TryParse(s, out double _);
+var uLongParsed = ulong.TryParse(s, out ulong _);
 
 int myInt = 5;
 float myFloat = (float)myInt;
 
-int i = (int)Pi;
-byte b = (byte)MaxZoom;
+int piCast = (int)Pi;
+byte byteCast = (byte)MaxZoom;
 var checkedVar = checked(Pi + number);
 
 
@@ -198,24 +199,25 @@ NewCar.Brand("Audi");
 //Inline param obj instantiation
 public void CallMethod(Person person) { };
 
-CallMethod(new Person());
 CallMethod(new Person() { FirstName = "Ivan", LastName = "Garzon" });
 
 //using primary constructor (new in C# 12)
 public class Person(string firstName, string lastName, MyCar car)
 {
-    public string First { set; } = firstName;
-    public string LastName { set; } = lastName;
-    public MyCar Car { set; } = car;
+    public string First { get;  set; } = firstName;
+    public string LastName { get; set; } = lastName;
+    public MyCar Car { get; set; } = car;
     public List<Pet> Pets { get; } = new(); //new in C# empty list
 
+    string? name;
+    
     public string Name    // Property
     {
         get => name;
         set => name = value;
     }
 
-    public string FullName { get; set; } //Auto-Implemented Property with get/set accessors
+    public required string FullName { get; set; } //Auto-Implemented Property with get/set accessors
 
     //dynamically defining get accessor
     public decimal Amount
@@ -232,6 +234,7 @@ public class Person(string firstName, string lastName, MyCar car)
 }
 
 public class MyCar(){};
+
 
 //In Abstract classes there's a strong "is-a" relationship
 //Use an abstract class when derived classes are logically types of the base class.
@@ -279,6 +282,12 @@ public class BaseClass
     public void DoWork() { WorkField++; }
     public int WorkField;
 }
+
+var myCat = new Cat("Johny");
+var myDog = new Dog("Dugg");
+
+//Determines whether the specified object is equal to the current object.
+var objectsEqual = myCat.Equals(myDog);
 
 //Hiding base class members with new members
 public class DerivedClass : BaseClass
@@ -356,11 +365,11 @@ int[] appendArray = [.. numbers, 11, 12, 13];
 var clonedArray = (int[])numArray.Clone();
 
 //Doing the same with Array.Copy()
-string[] copy = new string[numArray.Length];
-Array.Copy(numArray, copy, numArray.Length);
+string[] copy1 = new string[numArray.Length];
+Array.Copy(numArray, copy1, numArray.Length);
 
 //Using LINQ (creates a new array):
-string[] copy = phoneNumbers.ToArray();
+int[] copy2 = numArray2.ToArray();
 
 //Anonymous implicitely Typed array
 var anonArray = new[] { new { name = "apple", diam = 4 }, new { name = "grape", diam = 1 } };
@@ -384,12 +393,12 @@ List<string> list2 = new();          // ✅ target-typed new (C# 9.0+)
 List<string> list3 = new List<string>(); // ✅ traditional style, not used a lot anymore.
 List<string> nullItems = null;
 
-List<string> emptyArray = []; //declaring an empty array of string (C# 12+)
+List<int> emptyArray = []; //declaring an empty array of string (C# 12+)
 IEnumerable<string> emptyList = Enumerable.Empty<string>();
 
 var names = new List<string> { "Alice", "Bob", "Charlie", "David" };  //collection initializer syntax.
 List<string> collectionExpression = ["Alice", "Bob", "Charlie", "David"];  //(new) collection expressions C# 12+
-List<string> namesList2 = new() { "A", "B", "C" };
+List<string> letters = new() { "A", "B", "C" };
 
 Console.WriteLine($"My name is {names[0]}.");
 
@@ -410,11 +419,255 @@ IEnumerable<int> moreNumbers = [.. numbers, 11, 12, 13];
 IEnumerable<string> empty = [];                        
 IEnumerable<int> evenNumbers = Enumerable.Range(1, 5).Where(n => n % 2 == 0);
 
+//get the sequence iterator that can move through the collection one element at a time
+var firstIterator = evenNumbers.GetEnumerator();
+
+//Advances the iterator to the next element
+bool moveTrueOrFalse = firstIterator.MoveNext();
+
+//Gets the element at the current position of the iterator.
+var currentElement = firstIterator.Current;
+
+
 //Convert a list to array
-int[] numArray = numList.ToArray();
+int[] numArray = evenNumbers.ToArray();
 
 //Spans
 Span<char> c = ['a', 'b', 'c', 'd', 'e', 'f', 'h', 'i'];
+
+
+
+
+
+
+
+/********************************************************************
+ *                    Dictionaries <TKey, TValue>                   *
+ ********************************************************************/
+
+
+// Empty dictionary
+Dictionary<string, int> ages = new Dictionary<string, int>();
+
+// With initial capacity
+Dictionary<string, int> ages = new Dictionary<string, int>(100);
+
+// Collection initializer
+Dictionary<string, int> ages = new Dictionary<string, int>
+{
+    { "Alice", 25 },
+    { "Bob", 30 },
+    { "Charlie", 35 }
+};
+
+// Modern syntax (C# 9+)
+Dictionary<string, int> ages = new()
+{
+    { "Alice", 25 },
+    { "Bob", 30 },
+    { "Charlie", 35 }
+};
+
+// Index initializer (C# 6+)
+Dictionary<string, int> ages = new Dictionary<string, int>
+{
+    ["Alice"] = 25,
+    ["Bob"] = 30,
+    ["Charlie"] = 35,
+    ["David"] = 20
+};
+
+// From other collections
+var list = new List<Person> { ... };
+var dict = list.ToDictionary(p => p.Id, p => p.Name);
+
+
+Dictionary<string, int> ages = new Dictionary<string, int>();
+
+// Add method - throws exception if key exists
+ages.Add("Alice", 25);
+ages.Add("Bob", 30);
+
+// Index operator - overwrites if key exists
+ages["Charlie"] = 35;
+ages["Alice"] = 26;  // Updates Alice's age
+
+// TryAdd - returns false if key exists (C# 7.0+)
+bool added = ages.TryAdd("David", 40);  // true
+bool failed = ages.TryAdd("Alice", 27);  // false, doesn't add
+
+// Add multiple items
+foreach (var person in people)
+{
+    ages[person.Name] = person.Age;
+}
+
+// Index operator - throws exception if key doesn't exist
+int aliceAge = ages["Alice"];  // 25
+int eveAge = ages["Eve"];      // KeyNotFoundException!
+
+// TryGetValue - safe way to get values
+if (ages.TryGetValue("Alice", out int age))
+{
+    Console.WriteLine($"Alice is {age}");  // Alice is 25
+}
+else
+{
+    Console.WriteLine("Alice not found");
+}
+
+// Check if key exists first
+if (ages.ContainsKey("Bob"))
+{
+    int bobAge = ages["Bob"];
+}
+
+// Get value or default
+int charlieAge = ages.GetValueOrDefault("Charlie", 0);  // Returns 0 if not found
+
+// Update using index operator
+ages["Alice"] = 26;
+
+// Update if exists, add if not
+ages["Charlie"] = ages.ContainsKey("Charlie") ? ages["Charlie"] + 1 : 35;
+
+// Conditional update
+if (ages.ContainsKey("Bob"))
+{
+    ages["Bob"] = 31;
+}
+
+// Update with TryGetValue
+if (ages.TryGetValue("Alice", out int currentAge))
+{
+    ages["Alice"] = currentAge + 1;
+}
+
+// Remove by key - returns true if removed
+bool removed = ages.Remove("Bob");  // true
+bool notFound = ages.Remove("Eve"); // false
+
+// Remove and get value (C# 7.0+)
+if (ages.Remove("Charlie", out int charlieAge))
+{
+    Console.WriteLine($"Removed Charlie, age {charlieAge}");
+}
+
+// Clear all items
+ages.Clear();
+
+// Remove items matching condition
+var keysToRemove = ages.Where(x => x.Value < 30).Select(x => x.Key).ToList();
+foreach (var key in keysToRemove)
+{
+    ages.Remove(key);
+}
+
+// Check if key exists
+bool hasAlice = ages.ContainsKey("Alice");  // true
+bool hasEve = ages.ContainsKey("Eve");      // false
+
+// Check if value exists (slower - O(n))
+bool has25 = ages.ContainsValue(25);  // true
+bool has40 = ages.ContainsValue(40);  // false
+
+// Check count
+int count = ages.Count;  // 2
+bool isEmpty = ages.Count == 0;
+
+
+// Iterate through key-value pairs
+foreach (KeyValuePair<string, int> kvp in ages)
+{
+    Console.WriteLine($"{kvp.Key}: {kvp.Value}");
+}
+
+// Using var
+foreach (var kvp in ages)
+{
+    Console.WriteLine($"{kvp.Key}: {kvp.Value}");
+}
+
+// Deconstruction (C# 7.0+)
+foreach (var (name, age) in ages)
+{
+    Console.WriteLine($"{name}: {age}");
+}
+
+// Iterate through keys only
+foreach (string name in ages.Keys)
+{
+    Console.WriteLine(name);
+}
+
+// Iterate through values only
+foreach (int age in ages.Values)
+{
+    Console.WriteLine(age);
+}
+
+// Using LINQ
+ages.ToList().ForEach(kvp => Console.WriteLine($"{kvp.Key}: {kvp.Value}"));
+
+
+// Properties
+int count = ages.Count;                           // Number of items
+ICollection<string> keys = ages.Keys;             // All keys
+ICollection<int> values = ages.Values;            // All values
+IEqualityComparer<string> comparer = ages.Comparer; // Key comparer
+
+// Methods
+ages.Add("Charlie", 35);                          // Add item
+bool removed = ages.Remove("Bob");                // Remove item
+ages.Clear();                                     // Remove all items
+bool hasKey = ages.ContainsKey("Alice");          // Check key
+bool hasValue = ages.ContainsValue(25);           // Check value
+bool success = ages.TryGetValue("Alice", out int age);  // Safe get
+bool added = ages.TryAdd("David", 40);            // Safe add (C# 7.0+)
+
+
+// Filter by value
+var adults = ages.Where(x => x.Value >= 30).ToDictionary(x => x.Key, x => x.Value);
+
+// Filter by key
+var namesWithA = ages.Where(x => x.Key.StartsWith("A")).ToDictionary(x => x.Key, x => x.Value);
+
+// Get all values above threshold
+var agesOver25 = ages.Where(x => x.Value > 25).Select(x => x.Value).ToList();
+
+// Get all keys
+var allNames = ages.Keys.ToList();
+var namesList = ages.Select(x => x.Key).ToList();
+
+// Order by value
+var orderedByAge = ages.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+
+// Order by key
+var orderedByName = ages.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+
+// Get max/min
+var maxAge = ages.Max(x => x.Value);
+var oldestPerson = ages.FirstOrDefault(x => x.Value == ages.Max(v => v.Value));
+
+// Sum all values
+var totalAge = ages.Sum(x => x.Value);
+
+// Check if any match condition
+bool hasYoung = ages.Any(x => x.Value < 25);
+
+// Check if all match condition
+bool allAdults = ages.All(x => x.Value >= 18);
+
+// Group by condition
+var grouped = ages.GroupBy(x => x.Value >= 30 ? "Adult" : "Young");
+
+// Case-insensitive string keys
+Dictionary<string, int> dict = new Dictionary<string, int>(
+    StringComparer.OrdinalIgnoreCase);
+
+dict["Alice"] = 25;
+dict["alice"] = 30;  // Updates the same entry
+Console.WriteLine(dict["ALICE"]);  // 30
 
 
 
@@ -467,16 +720,16 @@ static IEnumerable<int> GetNumbers()
 
 
 //await foreach
-public static async IAsyncEnumerable<int> ReadSequence()
+static async IAsyncEnumerable<int> ReadSequenceAsync()
 {
-    foreach (var item in nextChunk)
+    foreach (var item in await nextChunk)
     {
         yield return item; //return an iterator that provides access to each element when it's available
     }
 }
 
-await foreach (var number in ReadSequence())
-   { Console.WriteLine(number); }
+await foreach (var yieldedNumber in ReadSequenceAsync())
+   { Console.WriteLine(yieldedNumber); }
 
 
 
@@ -503,6 +756,9 @@ IEnumerable<Node> Traverse(Node node)
 
 var myDate = new DateTime(1989, 5, 10);
 DateTime date = DateTime.Now;
+
+//Converts the string representation of a date and time to its DateTime equivalent
+var releaseDate = DateTime.Parse("1989-2-12");
 
 Console.Write($"{date:yyyy-MM-dd}"); // 2025-09-13
 Console.Write($"{date:MMM dd, yyyy}"); // Sep 13, 2025
@@ -611,7 +867,7 @@ public static async Task<int> GetPageLengthAsync(string endpoint)
 
 
 /********************************************************************
- *                                  LINQ                          *
+ *                                  LINQs                          *
  ********************************************************************/
 
 
@@ -625,11 +881,121 @@ IEnumerable<string> scoreQuery =
     orderby score descending
     select $"The score is {score}";
 
-//LINQ Method syntax
-var scoreQuery = scores.Where(s => s > 80).OrderByDescending(s => s);
+//Transforms each element
+var squares = numbers.Select(n => n * n);
 
-//Example to query all the even numbers
-var evenNumbers = numbers.Where(n => n % 2 == 0);
+//Filters elements based on a condition (ex: all the even numbers)
+var evenNumberList = numbers.Where(n => n % 2 == 0);
+
+//Sorts elements in ascending order
+var scoresOrderAlpha = scores.OrderBy(s => s); // Alphabetical order
+
+// Sorts elements in descending order
+var scoreQueryList = scores.OrderByDescending(s => s);
+
+//ThenBy / ThenByDescending - Secondary sort
+List<Person> people = [];
+var sortedTwice = people.OrderBy(p => p.Name).ThenBy(p => p.FullName);
+
+// All items in one flat list
+var flatList = names.SelectMany(name => name);  
+
+// Using SelectMany to flatten the nested structure
+var allSubjects = names.SelectMany(name => scores.Select(score => (name, score)));
+
+//Removes duplicates
+var uniqueNums = new[] { 1, 2, 2, 3 }.Distinct(); // [1, 2, 3]
+
+//Gets First N Elements
+var firstThree = numbers.Take(3); // Result: [1, 2, 3]
+
+//Skips First N Elements
+var afterFirstThree = numbers.Skip(3); // Result: [4, 5, 6, 7, 8, 9, 10]
+
+//Convert a List to an array[]
+int[] listToArray = numbers.ToArray();
+
+//Convert an IEnumerable sequence to a List<T>
+List<int> enumerableToList = scores.ToList();
+
+// Filters by type
+var onlyInts = scores.OfType<int>();  // Only integers from mixed collection
+
+// Reverses order
+var reversedOrdered = numbers.Reverse(); // [5, 4, 3, 2, 1]
+
+//Takes until condition fails
+var takeNumWhile = numbers.TakeWhile(n => n < 5);  // [1, 2, 3, 4]
+
+//Skips until condition fails
+var skipNumWhile = numbers.SkipWhile(n => n < 5);  // [5, 6, 7, 8, 9, 10]
+
+//Count numbers
+var countNumbers = numbers.Count();
+
+//sum numbers
+var sumNums = numbers.Sum();  // 55
+
+//Average of all elements
+var averageNums = numbers.Average();
+
+// Smallest/largest value
+int min = numbers.Min();  // 1
+int max = numbers.Max();  // 10
+
+// First or default value
+var firstOrDefault = empty.FirstOrDefault(); // 0 (for int)
+
+//Last element
+numbers.Last();  // 10
+
+//Element at specific index
+var elementAtPos = numbers.ElementAt(3);  // 4 (zero-indexed)
+
+//Returns default if empty
+var defaultIfEmpty = numbers.DefaultIfEmpty(99);  // [99]
+
+//Checks if any element matches
+var anyEvenNumbers = numbers.Any(n => n % 2 == 0);  // true
+
+//Checks if all elements match
+var positiveNums = numbers.All(n => n > 0);  // true
+
+//- Checks if element exists
+var containsElement = numbers.Contains(5);  // true
+
+List<int> set1 = [1, 2, 3];
+List<int> set2 = [2, 3, 4, 5];
+
+//Combines two sequences (no duplicates)
+var unionSet = set1.Union(set2);  // [1, 2, 3, 4, 5]
+
+//Common elements
+var commonSet = set1.Intersect(set2); // [2, 3]
+
+//Combines sequences (keeps duplicates)
+var combined = set1.Concat(set2);  // All elements from both
+
+//Groups by key
+people.GroupBy(p => p.LastName); // Groups: A-last name, B-last name, etc.
+
+//Inner Join
+people.Join(pet,
+    p => p.LastName,
+    o => o.CustomerId,
+    (c, o) => new { c.Name, o.Total });
+
+
+//Converts to dictionary
+Dictionary<string, string> enumerableToDict = people.ToDictionary(p => p.LastName, p => p.FullName);
+
+//Converts to HashSet
+HashSet<int> hashedNums = numbers.ToHashSet();  // HashSet<T>
+
+//Generates sequence of integers
+IEnumerable<int> quickSequence = Enumerable.Range(1, 5); // [1, 2, 3, 4, 5]
+
+
 
 
 
@@ -1004,6 +1370,29 @@ var json = await client.GetStringAsync("https://api.github.com/orgs/dotnet/repos
 var repositories = await client.GetFromJsonAsync<List<object>>("https://api.github.com/orgs/dotnet/repos");
 
 
+
+
+
+
+
+/********************************************************************
+ *                                Statements                        *
+ ********************************************************************/
+
+
+//The using statement ensures the correct use of an IDisposable instance
+//Here for example: when the control leaves the block of the using statement, an opened file is closed
+using (StreamReader reader = File.OpenText("numbers.txt"))
+{
+    string line;
+    while ((line = reader.ReadLine()) is not null)
+    {
+        if (int.TryParse(line, out int number))
+        {
+            numbers.Add(number);
+        }
+    }
+}
 
 
 
