@@ -76,6 +76,7 @@ Console.WriteLine(balance.ToString("C", CultureInfo.CurrentCulture));
 
 
 char character = 'a';
+char nullCharacter = default;
 string firstName2 = "John";
 var emptyStr = "";
 string? returnEmptyStr = String.Empty; //usually when return from method expects a string
@@ -98,6 +99,7 @@ string displayName = nullString ?? "Guest";
 //?? only checks for null, not for empty strings or other "falsy" values
 string chainedCoalescing = nullString ?? returnEmptyStr ?? emptyStr ?? "Unknown";
 
+//Common methods
 var trimmed = firstName2.Trim();
 var replaced = helloWorld.Replace("Hello", "Hey");
 var contains = helloWorld.Contains("Hello"); //true if it finds the substring
@@ -105,10 +107,21 @@ var length = helloWorld.Length;
 var startsWith = helloWorld.StartsWith("Hell");
 var endsWith = helloWorld.EndsWith("World");
 int index = helloWorld.IndexOf("World");
+var capitalLetter = char.ToUpper(helloWorld[0]);
+var concatenatedStr = string.Concat("Hello", " ", "World"); // "Hello World"
+var hasPunctuation = Char.IsPunctuation(character);
+var isLetter = char.IsLetter(character);
+var isDigit = char.IsDigit(character);
+var isLetterOrDigit = char.IsLetterOrDigit(character);
+
 
 // Split the line based on delimiters
 string[] parts = helloWorld.Split(',');
 public int WordCount() => helloWorld.Split([' ', '.', '?'], StringSplitOptions.RemoveEmptyEntries).Length;
+
+//joins a collection into a single string with separator.
+var joinedStr = string.Join(", ", new[] { "A", "B", "C" }); // "A, B, C"
+Console.WriteLine($"{string.Join(", ", numbers)}");
 
 //using the == operator to test that two string values are equal
 var product = "computer";
@@ -141,7 +154,14 @@ StringBuilder builder = new();
 builder.AppendLine("The following arguments are passed:");
 Console.WriteLine(builder.ToString());
 
+//Range and Index syntax - .. → Range operator - ^ → Index-from-end operator
+//array[start..end]  // end is exclusive 
+//^n count from the end of the collection
 
+s = "Hello World"; 
+s[6..]; // "World" 
+s[..5]; // "Hello" 
+s[^5..]; // "World"
 
 
 /********************************************************************
@@ -168,6 +188,521 @@ float myFloat = (float)myInt;
 int piCast = (int)Pi;
 byte byteCast = (byte)MaxZoom;
 var checkedVar = checked(Pi + number);
+
+
+
+
+
+/********************************************************************
+ *                                Arrays                            *
+ ********************************************************************/
+
+
+int[] numbers = { 1, 2, 3, 4, 5, 6 }; //classic (implicit) array initialization (preferred collection expressions)
+int[] numArray2 = [1903, 1907, 1910]; //Collection Expression Syntax
+
+int[] numArray3 = new int[3]; //Arrays in C# are fixed-size
+
+Console.WriteLine($"{string.Join(", ", numbers)}");
+
+var length2 = numArray3.Length;
+
+//Use this when you need to pass the array to a method or property that expects new
+var numArray4 = new int[]{1903, 1907, 1910};
+
+int last = numbers[^1]; // ^1 is the last element (in this case 6)
+
+//slice arrays (slice is a copy of the original array.)
+int[] smallNumbers = numbers[0..5]; // elements from index 0 to 4
+
+var slice = numbers[..3]; //Slice from beginning to index 3
+
+var customSlice = numbers[2..]; //Slice from index 2 to end
+
+var lastTwo = numbers[^2..]; //Use ^ to count from the end. Here last 2 elements
+
+var copy = numbers[..]; // makes a shallow copy: 
+
+//The spread element, ..e in a collection expression adds all the elements in that expression
+int[] appendArray = [.. numbers, 11, 12, 13];
+
+Array.Sort(numbers);                    // [1,2,3,4,5]
+Array.Reverse(numbers);                 // [5,4,3,2,1]
+Array.Fill(numbers, 0);                 // all zeros
+Array.Fill(numbers, 9, 1, 3);           // fill with 9, starting from index 1, 3 times.
+int idx = Array.IndexOf(numbers, 3);   // find index
+int bi  = Array.BinarySearch(numbers, 3); // requires sorted
+bool ex = Array.Exists(numbers, n => n > 3);
+var value = numbers.ElementAtOrDefault(Array.IndexOf(numbers, 3));  //Returns default value instead of throwing.
+
+
+//Copying an array to a new reference array, now these are 2 different object references
+//use Clone() in older code or for compatibility reasons
+var clonedArray = (int[])numArray.Clone();
+
+//Doing the same with Array.Copy()
+//Array.Copy(sourceArray, sourceIndex, destinationArray, destinationIndex, length);
+string[] copy1 = new string[numArray.Length];
+Array.Copy(numArray, copy1, numArray.Length);
+
+//Using LINQ (creates a new array):
+int[] copy2 = numArray2.ToArray();
+
+//Anonymous implicitely Typed array
+var anonArray = new[] { new { name = "apple", diam = 4 }, new { name = "grape", diam = 1 } };
+
+// Create a jagged 2D array:
+int[][] twoD = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+int twoDval = twoD[1][2]; //6
+
+// Rectangular 2D array
+int[,] rect = { {1,2}, {3,4} };
+int v = rect[0,1];   
+int rows = rect.GetLength(0);
+int cols = rect.GetLength(1);
+
+Array.Resize(ref numbers, numbers.Length + 1);
+
+
+
+/********************************************************************
+ *                          Lists & Collections                     *
+ ********************************************************************/
+
+
+//Lists and arrays are indexable collections, but not all iterable (IEnumerable) types are.
+
+var list1 = new List<string>();  // ✅ var with full type
+List<string> list2 = new();          // ✅ target-typed new (C# 9.0+)
+List<string> list3 = new List<string>(); // ✅ traditional style, not used a lot anymore.
+List<string>? nullItems = null;           // Use when the list might be assigned later
+
+List<int> emptyArray = []; //declaring an empty array of string (C# 12+)
+IEnumerable<string> emptyList = Enumerable.Empty<string>();
+
+var names = new List<string> { "Alice", "Bob", "Charlie", "David" };  //collection initializer syntax.
+List<string> collectionExpression = ["Alice", "Bob", "Charlie", "David"];  //(new) collection expressions C# 12+
+List<string> letters = new() { "A", "B", "C" };
+
+Console.WriteLine($"My name is {names[0]}.");
+
+var copyList = new List<string>(names);
+
+//Null Coalescing Assignment Operator (??=)
+nullItems ??= new List<string>();  // Initialize only if null
+
+names.Add("Charlie");
+names.AddRange(["Dave", "Eve"]);
+names.Insert(1, "Zara");        // insert at index 1
+names.Remove("Alice");          // remove first match
+names.RemoveAt(0);              // remove by index
+names.RemoveAll(n => n.StartsWith("D"));
+names.Clear();
+var countListItems = names.Count; //Count is a property for lists, different for Count() for iterable collections
+names.Sort();
+names.Reverse();
+
+//looping through list
+foreach (var letter in letters)
+    Console.WriteLine(letter);
+
+
+//Search capabilities
+var index = names.IndexOf("Felipe"); //If the item isn't in the list, IndexOf returns -1.
+bool has = list.Contains("Alice");
+bool any = list.Exists(n => n.Length > 4);
+string found = list.Find(n => n[0] == 'B'); 
+
+
+// .. spread element to expand a collection
+IEnumerable<int> moreNumbers = [.. numbers, 11, 12, 13];
+IEnumerable<string> empty = [];                        
+IEnumerable<int> evenNumbers = Enumerable.Range(1, 5).Where(n => n % 2 == 0);
+
+//get the sequence iterator that can move through the collection one element at a time
+//enumerator starts before the first element.
+using var firstIterator = evenNumbers.GetEnumerator();
+
+//Advances the iterator to the next element
+bool moveTrueOrFalse = firstIterator.MoveNext();
+
+//Gets the element at the current position of the iterator.
+var currentElement = firstIterator.Current;
+
+//iterating with IEnumerator<T>
+while (firstIterator.MoveNext())
+{
+    var current = firstIterator.Current;
+    Console.WriteLine(current);
+}
+
+//Convert a list to array
+int[] numArray = evenNumbers.ToArray();
+
+//Converting an array to a List<T>
+List<string> names = copy2.ToList();
+
+//Spans
+Span<char> c = ['a', 'b', 'c', 'd', 'e', 'f', 'h', 'i'];
+Span<char> slice = c.Slice(1, 2); // b, c
+
+//Remove duplicates from a list:
+var unique = new HashSet<string>(names);
+
+
+
+/********************************************************************
+ *                    Dictionaries<TKey, TValue>                   *
+ ********************************************************************/
+
+
+// Classic explicit constructor
+Dictionary<string, int> ages = new Dictionary<string, int>();
+
+// With initial capacity
+Dictionary<string, int> ages = new Dictionary<string, int>(100);
+
+//Target-typed (C# 9+)
+Dictionary<int, string> targetTypedDict = new();
+
+//var with Ctor
+var inferredDict = new Dictionary<string, int>();
+
+//Collection expression (C# 12 - careful it does NOT work for empty dictionaries without type context)
+Dictionary<string, string> collectionDict = [];
+
+// Case-insensitive string keys
+Dictionary<string, int> dict = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+// Collection initializer
+Dictionary<string, int> ages = new Dictionary<string, int>
+{
+    { "Alice", 25 },
+    { "Bob", 30 },
+    { "Charlie", 35 }
+};
+
+// Modern syntax (C# 9+)
+Dictionary<string, int> ages = new()
+{
+    { "Alice", 25 },
+    { "Bob", 30 },
+    { "Charlie", 35 }
+};
+
+// Index initializer (C# 6+)
+Dictionary<string, int> ages = new Dictionary<string, int>
+{
+    ["Alice"] = 25,
+    ["Bob"] = 30,
+    ["Charlie"] = 35,
+    ["David"] = 20
+};
+
+// Add method - throws exception if key exists
+ages.Add("Alice", 25);
+ages.Add("Bob", 30);
+
+// Index operator - overwrites if key exists
+ages["Charlie"] = 35;
+ages["Alice"] = 26;  // Updates Alice's age
+
+// TryAdd - returns false if key exists (C# 7.0+)
+bool added = ages.TryAdd("David", 40);  // true
+bool failed = ages.TryAdd("Alice", 27);  // false, doesn't add
+
+// Add multiple items
+foreach (var person in people)
+{
+    ages[person.Name] = person.Age;
+}
+
+// Index operator - throws exception if key doesn't exist
+int aliceAge = ages["Alice"];  // 25
+int eveAge = ages["Eve"];      // KeyNotFoundException!
+
+// TryGetValue - safe way to get values
+if (ages.TryGetValue("Alice", out int age))
+{
+    Console.WriteLine($"Alice is {age}");  // Alice is 25
+}
+else
+{
+    Console.WriteLine("Alice not found");
+}
+
+// Check if key exists first
+if (ages.ContainsKey("Bob"))
+{
+    int bobAge = ages["Bob"];
+}
+
+// Get value or default
+int charlieAge = ages.GetValueOrDefault("Charlie", 0);  // Returns 0 if not found
+
+// Update using index operator
+ages["Alice"] = 26;
+
+// Update if exists, add if not
+ages["Charlie"] = ages.ContainsKey("Charlie") ? ages["Charlie"] + 1 : 35;
+
+// Conditional update
+if (ages.ContainsKey("Bob"))
+{
+    ages["Bob"] = 31;
+}
+
+// Update with TryGetValue
+if (ages.TryGetValue("Alice", out int currentAge))
+{
+    ages["Alice"] = currentAge + 1;
+}
+
+// Remove by key - returns true if removed
+bool removed = ages.Remove("Bob");  // true
+bool notFound = ages.Remove("Eve"); // false
+
+// Remove and get value (C# 7.0+)
+if (ages.Remove("Charlie", out int charlieAge))
+{
+    Console.WriteLine($"Removed Charlie, age {charlieAge}");
+}
+
+// Clear all items
+ages.Clear();
+
+// Remove items matching condition
+var keysToRemove = ages.Where(x => x.Value < 30).Select(x => x.Key).ToList();
+foreach (var key in keysToRemove)
+{
+    ages.Remove(key);
+}
+
+// Check if key exists
+bool hasAlice = ages.ContainsKey("Alice");  // true
+bool hasEve = ages.ContainsKey("Eve");      // false
+
+// Check if value exists (slower - O(n))
+bool has25 = ages.ContainsValue(25);  // true
+bool has40 = ages.ContainsValue(40);  // false
+
+// Check count
+int count = ages.Count;  // 2
+bool isEmpty = ages.Count == 0;
+
+
+// Iterate through key-value pairs
+foreach (KeyValuePair<string, int> kvp in ages)
+{
+    Console.WriteLine($"{kvp.Key}: {kvp.Value}");
+}
+
+// Using var
+foreach (var kvp in ages)
+{
+    Console.WriteLine($"{kvp.Key}: {kvp.Value}");
+}
+
+// Deconstruction (C# 7.0+)
+foreach (var (name, age) in ages)
+{
+    Console.WriteLine($"{name}: {age}");
+}
+
+// Iterate through keys only
+foreach (string name in ages.Keys)
+{
+    Console.WriteLine(name);
+}
+
+// Iterate through values only
+foreach (int age in ages.Values)
+{
+    Console.WriteLine(age);
+}
+
+// Using LINQ
+ages.ToList().ForEach(kvp => Console.WriteLine($"{kvp.Key}: {kvp.Value}"));
+
+// Transform to Dict from other collections
+List<KeyValuePair<string,int>> keyValuePairList = [
+    new KeyValuePair<string, int>("Myriam", 25),
+    new KeyValuePair<string, int>("John", 45)];
+    
+Dictionary<string,int> people = keyValuePairList.ToDictionary(x => x.Key, x => x.Value);
+
+// Properties
+int count = ages.Count;                           // Number of items
+ICollection<string> keys = ages.Keys;             // All keys
+ICollection<int> values = ages.Values;            // All values
+IEqualityComparer<string> comparer = ages.Comparer; // Key comparer
+
+// Methods
+ages.Add("Charlie", 35);                          // Add item
+bool removed = ages.Remove("Bob");                // Remove item
+ages.Clear();                                     // Remove all items
+bool hasKey = ages.ContainsKey("Alice");          // Check key
+bool hasValue = ages.ContainsValue(25);           // Check value
+bool success = ages.TryGetValue("Alice", out int age);  // Safe get
+bool added = ages.TryAdd("David", 40);            // Safe add (C# 7.0+)
+
+
+// Filter by value
+var adults = ages.Where(x => x.Value >= 30).ToDictionary(x => x.Key, x => x.Value);
+
+// Filter by key
+var namesWithA = ages.Where(x => x.Key.StartsWith("A")).ToDictionary(x => x.Key, x => x.Value);
+
+// Get all values above threshold
+var agesOver25 = ages.Where(x => x.Value > 25).Select(x => x.Value).ToList();
+
+// Get all keys
+var allNames = ages.Keys.ToList();
+var namesList = ages.Select(x => x.Key).ToList();
+
+// Order by value
+var orderedByAge = ages.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+
+// Order by key
+var orderedByName = ages.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+
+// Get max/min
+var maxAge = ages.Max(x => x.Value);
+var oldestPerson = ages.FirstOrDefault(x => x.Value == ages.Max(v => v.Value));
+
+// Sum all values
+var totalAge = ages.Sum(x => x.Value);
+
+// Check if any match condition
+bool hasYoung = ages.Any(x => x.Value < 25);
+
+// Check if all match condition
+bool allAdults = ages.All(x => x.Value >= 18);
+
+// Group by condition
+var grouped = ages.GroupBy(x => x.Value >= 30 ? "Adult" : "Young");
+
+dict["Alice"] = 25;
+dict["alice"] = 30;  // Updates the same entry
+Console.WriteLine(dict["ALICE"]);  // 30
+
+
+
+
+
+
+/********************************************************************
+ *                              HashSets                            *
+ ********************************************************************/
+//Stores unique elements only (no duplicates)
+//Is unordered
+//Provides very fast lookups (typically O(1))
+
+var set = new HashSet<int> { 1, 2, 3, 3 }; //Result: {1, 2, 3}
+ 
+ 
+ 
+ 
+ 
+/********************************************************************
+ *                          Loops & Sequences                       *
+ ********************************************************************/
+
+
+foreach (var number in numbers)
+{
+    //.. Do some action
+}
+
+foreach (var number in numbers[2..4])
+{
+    //.. Do some action
+}
+
+for (int i = 0; i < numbers.Length; i++)
+{
+    //.. Do some action
+}
+
+while (true)
+{
+    //Do something
+}
+
+do
+{ //your code executes here
+}
+while (true);//condition here
+
+
+//using a loop with a yield return statement
+foreach (int number in GetNumbers())
+{
+    Console.WriteLine(number);
+}
+
+//iterator method
+//returns a sequence of values one at a time, without needing to build and store the entire collection in memory
+static IEnumerable<int> GetNumbers()
+{
+    for (int i = 1; i <= 5; i++)
+    {
+        Console.WriteLine($"Generating {i}");
+        yield return i; //the values are produced lazily (lazy sequences)
+    }
+}
+
+
+//await foreach
+static async IAsyncEnumerable<int> ReadSequenceAsync()
+{
+    foreach (var item in await nextChunk)
+    {
+        yield return item; //return an iterator that provides access to each element when it's available
+    }
+}
+
+await foreach (var yieldedNumber in ReadSequenceAsync())
+   { Console.WriteLine(yieldedNumber); }
+
+
+
+//Recursive algorithms (e.g., tree traversal)
+IEnumerable<Node> Traverse(Node node)
+{
+    yield return node;
+    foreach (var child in node.Children)
+    {
+        foreach (var descendant in Traverse(child))
+        {
+            yield return descendant;
+        }
+    }
+}
+
+
+
+
+
+/********************************************************************
+ *                                Dates                          *
+ ********************************************************************/
+
+var myDate = new DateTime(1989, 5, 10);
+DateTime date = DateTime.Now;
+
+//Converts the string representation of a date and time to its DateTime equivalent
+var releaseDate = DateTime.Parse("1989-2-12");
+
+Console.Write($"{date:yyyy-MM-dd}"); // 2025-09-13
+Console.Write($"{date:MMM dd, yyyy}"); // Sep 13, 2025
+Console.Write($"{date:HH:mm:ss}"); // 14:30:25
+
+var dateMorning = new DateTime(2025, 9, 25, 8, 30, 0);  // Thursday 8:30 AM
+var dateEvening = new DateTime(2025, 9, 25, 17, 45, 0);  // Thursday 5:45 PM  
+
+Console.WriteLine($"Testing: {dateMorning:dddd, MMMM dd, yyyy HH:mm}");
+
 
 
 
@@ -326,448 +861,6 @@ return 1;
 Type t = typeof(Pet);
 MemberInfo[] members = t.GetMembers();
 
-
-
-
-/********************************************************************
- *                                Arrays                            *
- ********************************************************************/
-
-
-int[] numbers = { 1, 2, 3, 4, 5, 6 }; //classic (implicit) array initialization (preferred collection expressions)
-int[] numArray2 = [1903, 1907, 1910]; //Collection Expression Syntax
-
-int[] numArray3 = new int[3]; //Arrays in C# are fixed-size
-
-var length2 = numArray3.Length;
-
-//Use this when you need to pass the array to a method or property that expects new
-var numArray4 = new int[]{1903, 1907, 1910};
-
-int last = numbers[^1]; // ^1 is the last element (in this case 6)
-
-//slice arrays
-int[] smallNumbers = numbers[0..5]; // elements from index 0 to 4
-
-var slice = numbers[..3]; //Slice from beginning to index 3
-
-var customSlice = numbers[2..]; //Slice from index 2 to end
-
-var lastTwo = numbers[^2..]; //Use ^ to count from the end. Here last 2 elements
-
-var copy = numbers[..]; // makes a shallow copy: 
-
-//The spread element, ..e in a collection expression adds all the elements in that expression
-int[] appendArray = [.. numbers, 11, 12, 13];
-
-//Copying an array to a new reference array, now these are 2 different object references
-//use Clone() in older code or for compatibility reasons
-var clonedArray = (int[])numArray.Clone();
-
-//Doing the same with Array.Copy()
-string[] copy1 = new string[numArray.Length];
-Array.Copy(numArray, copy1, numArray.Length);
-
-//Using LINQ (creates a new array):
-int[] copy2 = numArray2.ToArray();
-
-//Anonymous implicitely Typed array
-var anonArray = new[] { new { name = "apple", diam = 4 }, new { name = "grape", diam = 1 } };
-
-// Create a jagged 2D array:
-int[][] twoD = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-
-
-
-
-
-/********************************************************************
- *                          Lists & Collections                     *
- ********************************************************************/
-
-
-//Lists and arrays are indexable collections, but not all iterable (IEnumerable) types are.
-
-var list1 = new List<string>();  // ✅ var with full type
-List<string> list2 = new();          // ✅ target-typed new (C# 9.0+)
-List<string> list3 = new List<string>(); // ✅ traditional style, not used a lot anymore.
-List<string> nullItems = null;
-
-List<int> emptyArray = []; //declaring an empty array of string (C# 12+)
-IEnumerable<string> emptyList = Enumerable.Empty<string>();
-
-var names = new List<string> { "Alice", "Bob", "Charlie", "David" };  //collection initializer syntax.
-List<string> collectionExpression = ["Alice", "Bob", "Charlie", "David"];  //(new) collection expressions C# 12+
-List<string> letters = new() { "A", "B", "C" };
-
-Console.WriteLine($"My name is {names[0]}.");
-
-//Null Coalescing Assignment Operator (??=)
-nullItems ??= new List<string>();  // Initialize only if null
-
-names.Add("Gonzo");
-names.Remove("Alice");
-names.AddRange(["John", "Sylvia", "Denis"]);
-
-var countListItems = names.Count; //Count is a property for lists, different for Count() for iterable collections
-names.Sort();
-
-var index = names.IndexOf("Felipe"); //If the item isn't in the list, IndexOf returns -1.
-
-// .. spread element to expand a collection
-IEnumerable<int> moreNumbers = [.. numbers, 11, 12, 13];
-IEnumerable<string> empty = [];                        
-IEnumerable<int> evenNumbers = Enumerable.Range(1, 5).Where(n => n % 2 == 0);
-
-//get the sequence iterator that can move through the collection one element at a time
-var firstIterator = evenNumbers.GetEnumerator();
-
-//Advances the iterator to the next element
-bool moveTrueOrFalse = firstIterator.MoveNext();
-
-//Gets the element at the current position of the iterator.
-var currentElement = firstIterator.Current;
-
-
-//Convert a list to array
-int[] numArray = evenNumbers.ToArray();
-
-//Spans
-Span<char> c = ['a', 'b', 'c', 'd', 'e', 'f', 'h', 'i'];
-
-
-
-
-
-
-
-/********************************************************************
- *                    Dictionaries <TKey, TValue>                   *
- ********************************************************************/
-
-
-// Empty dictionary
-Dictionary<string, int> ages = new Dictionary<string, int>();
-
-// With initial capacity
-Dictionary<string, int> ages = new Dictionary<string, int>(100);
-
-// Collection initializer
-Dictionary<string, int> ages = new Dictionary<string, int>
-{
-    { "Alice", 25 },
-    { "Bob", 30 },
-    { "Charlie", 35 }
-};
-
-// Modern syntax (C# 9+)
-Dictionary<string, int> ages = new()
-{
-    { "Alice", 25 },
-    { "Bob", 30 },
-    { "Charlie", 35 }
-};
-
-// Index initializer (C# 6+)
-Dictionary<string, int> ages = new Dictionary<string, int>
-{
-    ["Alice"] = 25,
-    ["Bob"] = 30,
-    ["Charlie"] = 35,
-    ["David"] = 20
-};
-
-// From other collections
-var list = new List<Person> { ... };
-var dict = list.ToDictionary(p => p.Id, p => p.Name);
-
-
-Dictionary<string, int> ages = new Dictionary<string, int>();
-
-// Add method - throws exception if key exists
-ages.Add("Alice", 25);
-ages.Add("Bob", 30);
-
-// Index operator - overwrites if key exists
-ages["Charlie"] = 35;
-ages["Alice"] = 26;  // Updates Alice's age
-
-// TryAdd - returns false if key exists (C# 7.0+)
-bool added = ages.TryAdd("David", 40);  // true
-bool failed = ages.TryAdd("Alice", 27);  // false, doesn't add
-
-// Add multiple items
-foreach (var person in people)
-{
-    ages[person.Name] = person.Age;
-}
-
-// Index operator - throws exception if key doesn't exist
-int aliceAge = ages["Alice"];  // 25
-int eveAge = ages["Eve"];      // KeyNotFoundException!
-
-// TryGetValue - safe way to get values
-if (ages.TryGetValue("Alice", out int age))
-{
-    Console.WriteLine($"Alice is {age}");  // Alice is 25
-}
-else
-{
-    Console.WriteLine("Alice not found");
-}
-
-// Check if key exists first
-if (ages.ContainsKey("Bob"))
-{
-    int bobAge = ages["Bob"];
-}
-
-// Get value or default
-int charlieAge = ages.GetValueOrDefault("Charlie", 0);  // Returns 0 if not found
-
-// Update using index operator
-ages["Alice"] = 26;
-
-// Update if exists, add if not
-ages["Charlie"] = ages.ContainsKey("Charlie") ? ages["Charlie"] + 1 : 35;
-
-// Conditional update
-if (ages.ContainsKey("Bob"))
-{
-    ages["Bob"] = 31;
-}
-
-// Update with TryGetValue
-if (ages.TryGetValue("Alice", out int currentAge))
-{
-    ages["Alice"] = currentAge + 1;
-}
-
-// Remove by key - returns true if removed
-bool removed = ages.Remove("Bob");  // true
-bool notFound = ages.Remove("Eve"); // false
-
-// Remove and get value (C# 7.0+)
-if (ages.Remove("Charlie", out int charlieAge))
-{
-    Console.WriteLine($"Removed Charlie, age {charlieAge}");
-}
-
-// Clear all items
-ages.Clear();
-
-// Remove items matching condition
-var keysToRemove = ages.Where(x => x.Value < 30).Select(x => x.Key).ToList();
-foreach (var key in keysToRemove)
-{
-    ages.Remove(key);
-}
-
-// Check if key exists
-bool hasAlice = ages.ContainsKey("Alice");  // true
-bool hasEve = ages.ContainsKey("Eve");      // false
-
-// Check if value exists (slower - O(n))
-bool has25 = ages.ContainsValue(25);  // true
-bool has40 = ages.ContainsValue(40);  // false
-
-// Check count
-int count = ages.Count;  // 2
-bool isEmpty = ages.Count == 0;
-
-
-// Iterate through key-value pairs
-foreach (KeyValuePair<string, int> kvp in ages)
-{
-    Console.WriteLine($"{kvp.Key}: {kvp.Value}");
-}
-
-// Using var
-foreach (var kvp in ages)
-{
-    Console.WriteLine($"{kvp.Key}: {kvp.Value}");
-}
-
-// Deconstruction (C# 7.0+)
-foreach (var (name, age) in ages)
-{
-    Console.WriteLine($"{name}: {age}");
-}
-
-// Iterate through keys only
-foreach (string name in ages.Keys)
-{
-    Console.WriteLine(name);
-}
-
-// Iterate through values only
-foreach (int age in ages.Values)
-{
-    Console.WriteLine(age);
-}
-
-// Using LINQ
-ages.ToList().ForEach(kvp => Console.WriteLine($"{kvp.Key}: {kvp.Value}"));
-
-
-// Properties
-int count = ages.Count;                           // Number of items
-ICollection<string> keys = ages.Keys;             // All keys
-ICollection<int> values = ages.Values;            // All values
-IEqualityComparer<string> comparer = ages.Comparer; // Key comparer
-
-// Methods
-ages.Add("Charlie", 35);                          // Add item
-bool removed = ages.Remove("Bob");                // Remove item
-ages.Clear();                                     // Remove all items
-bool hasKey = ages.ContainsKey("Alice");          // Check key
-bool hasValue = ages.ContainsValue(25);           // Check value
-bool success = ages.TryGetValue("Alice", out int age);  // Safe get
-bool added = ages.TryAdd("David", 40);            // Safe add (C# 7.0+)
-
-
-// Filter by value
-var adults = ages.Where(x => x.Value >= 30).ToDictionary(x => x.Key, x => x.Value);
-
-// Filter by key
-var namesWithA = ages.Where(x => x.Key.StartsWith("A")).ToDictionary(x => x.Key, x => x.Value);
-
-// Get all values above threshold
-var agesOver25 = ages.Where(x => x.Value > 25).Select(x => x.Value).ToList();
-
-// Get all keys
-var allNames = ages.Keys.ToList();
-var namesList = ages.Select(x => x.Key).ToList();
-
-// Order by value
-var orderedByAge = ages.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
-
-// Order by key
-var orderedByName = ages.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
-
-// Get max/min
-var maxAge = ages.Max(x => x.Value);
-var oldestPerson = ages.FirstOrDefault(x => x.Value == ages.Max(v => v.Value));
-
-// Sum all values
-var totalAge = ages.Sum(x => x.Value);
-
-// Check if any match condition
-bool hasYoung = ages.Any(x => x.Value < 25);
-
-// Check if all match condition
-bool allAdults = ages.All(x => x.Value >= 18);
-
-// Group by condition
-var grouped = ages.GroupBy(x => x.Value >= 30 ? "Adult" : "Young");
-
-// Case-insensitive string keys
-Dictionary<string, int> dict = new Dictionary<string, int>(
-    StringComparer.OrdinalIgnoreCase);
-
-dict["Alice"] = 25;
-dict["alice"] = 30;  // Updates the same entry
-Console.WriteLine(dict["ALICE"]);  // 30
-
-
-
-
-
-
-/********************************************************************
- *                          Loops & Sequences                       *
- ********************************************************************/
-
-
-foreach (var number in numbers)
-{
-    //.. Do some action
-}
-
-foreach (var number in numbers[2..4])
-{
-    //.. Do some action
-}
-
-
-while (true)
-{
-    //Do something
-}
-
-do
-{ //your code executes here
-}
-while (true);//condition here
-
-
-//using a loop with a yield return statement
-foreach (int number in GetNumbers())
-{
-    Console.WriteLine(number);
-}
-
-//iterator method
-//returns a sequence of values one at a time, without needing to build and store the entire collection in memory
-static IEnumerable<int> GetNumbers()
-{
-    for (int i = 1; i <= 5; i++)
-    {
-        Console.WriteLine($"Generating {i}");
-        yield return i; //the values are produced lazily (lazy sequences)
-    }
-}
-
-
-//await foreach
-static async IAsyncEnumerable<int> ReadSequenceAsync()
-{
-    foreach (var item in await nextChunk)
-    {
-        yield return item; //return an iterator that provides access to each element when it's available
-    }
-}
-
-await foreach (var yieldedNumber in ReadSequenceAsync())
-   { Console.WriteLine(yieldedNumber); }
-
-
-
-//Recursive algorithms (e.g., tree traversal)
-IEnumerable<Node> Traverse(Node node)
-{
-    yield return node;
-    foreach (var child in node.Children)
-    {
-        foreach (var descendant in Traverse(child))
-        {
-            yield return descendant;
-        }
-    }
-}
-
-
-
-
-
-/********************************************************************
- *                                Dates                          *
- ********************************************************************/
-
-var myDate = new DateTime(1989, 5, 10);
-DateTime date = DateTime.Now;
-
-//Converts the string representation of a date and time to its DateTime equivalent
-var releaseDate = DateTime.Parse("1989-2-12");
-
-Console.Write($"{date:yyyy-MM-dd}"); // 2025-09-13
-Console.Write($"{date:MMM dd, yyyy}"); // Sep 13, 2025
-Console.Write($"{date:HH:mm:ss}"); // 14:30:25
-
-var dateMorning = new DateTime(2025, 9, 25, 8, 30, 0);  // Thursday 8:30 AM
-var dateEvening = new DateTime(2025, 9, 25, 17, 45, 0);  // Thursday 5:45 PM  
-
-Console.WriteLine($"Testing: {dateMorning:dddd, MMMM dd, yyyy HH:mm}");
 
 
 
@@ -1394,6 +1487,16 @@ using (StreamReader reader = File.OpenText("numbers.txt"))
     }
 }
 
+
+
+
+
+/********************************************************************
+ *                                Regex                             *
+ ********************************************************************/
+
+//need to use the Regex namespace before
+//using System.Text.RegularExpressions;
 
 
 
