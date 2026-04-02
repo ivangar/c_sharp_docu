@@ -40,6 +40,7 @@ double d = 1.0 / 3;       // ~0.333333333333333 precision matters but not to the
 decimal m = 1.0M / 3;     // Financial and monetary calculations with high precision
 int? age = null;
 int actualAge = age ?? 18;
+int smallest = int.MinValue;   //the smallest possible value of int
 
 const float Pi = 3.14F;  //constant use Pascal Case
 const int MaxZoom = 5;
@@ -81,6 +82,7 @@ string firstName2 = "John";
 var emptyStr = "";
 string? returnEmptyStr = String.Empty; //usually when return from method expects a string
 string? nullString = null;
+var newStr = new string(['h','e','l','l','o']);
 
 if (!string.IsNullOrEmpty(returnEmptyStr))
     Console.WriteLine("{0}", returnEmptyStr);
@@ -103,6 +105,7 @@ string chainedCoalescing = nullString ?? returnEmptyStr ?? emptyStr ?? "Unknown"
 var trimmed = firstName2.Trim();
 var replaced = helloWorld.Replace("Hello", "Hey");
 var contains = helloWorld.Contains("Hello"); //true if it finds the substring
+var subStr = helloWorld.Substring(0, 5); // Substring(startIndex, length) => "Hello"
 var length = helloWorld.Length;
 var startsWith = helloWorld.StartsWith("Hell");
 var endsWith = helloWorld.EndsWith("World");
@@ -113,6 +116,9 @@ var hasPunctuation = Char.IsPunctuation(character);
 var isLetter = char.IsLetter(character);
 var isDigit = char.IsDigit(character);
 var isLetterOrDigit = char.IsLetterOrDigit(character);
+char[] chars = helloWorld.ToCharArray(); //Copies the characters to a Unicode char[].
+var lowerCaseStr = helloWorld.ToLowerInvariant(); //Same as string.ToLower()
+var upperCaseStr = helloWorld.ToUpperInvariant(); //Same as string.ToUpper()
 
 
 // Split the line based on delimiters
@@ -154,10 +160,7 @@ StringBuilder builder = new();
 builder.AppendLine("The following arguments are passed:");
 Console.WriteLine(builder.ToString());
 
-//Range and Index syntax - .. → Range operator - ^ → Index-from-end operator
-//array[start..end]  // end is exclusive 
-//^n count from the end of the collection
-
+//Range and Index
 s = "Hello World"; 
 s[6..]; // "World" 
 s[..5]; // "Hello" 
@@ -209,6 +212,10 @@ var length2 = numArray3.Length;
 
 //Use this when you need to pass the array to a method or property that expects new
 var numArray4 = new int[]{1903, 1907, 1910};
+
+//Range and Index syntax - .. → Range operator - ^ → Index-from-end operator
+//array[start..end]  // end is exclusive 
+//^n count from the end of the collection
 
 int last = numbers[^1]; // ^1 is the last element (in this case 6)
 
@@ -266,7 +273,7 @@ Array.Resize(ref numbers, numbers.Length + 1);
 
 
 /********************************************************************
- *                          Lists & Collections                     *
+ *                          Lists                                   *
  ********************************************************************/
 
 
@@ -278,7 +285,6 @@ List<string> list3 = new List<string>(); // ✅ traditional style, not used a lo
 List<string>? nullItems = null;           // Use when the list might be assigned later
 
 List<int> emptyArray = []; //declaring an empty array of string (C# 12+)
-IEnumerable<string> emptyList = Enumerable.Empty<string>();
 
 var names = new List<string> { "Alice", "Bob", "Charlie", "David" };  //collection initializer syntax.
 List<string> collectionExpression = ["Alice", "Bob", "Charlie", "David"];  //(new) collection expressions C# 12+
@@ -286,11 +292,16 @@ List<string> letters = new() { "A", "B", "C" };
 
 Console.WriteLine($"My name is {names[0]}.");
 
+//Quick print of whole list to screen
+names.ForEach(name => Console.Write(name + " "));
+Console.WriteLine($"List items: {string.Join(", ", names)}");
+
 var copyList = new List<string>(names);
 
 //Null Coalescing Assignment Operator (??=)
 nullItems ??= new List<string>();  // Initialize only if null
 
+// Common methods
 names.Add("Charlie");
 names.AddRange(["Dave", "Eve"]);
 names.Insert(1, "Zara");        // insert at index 1
@@ -298,14 +309,14 @@ names.Remove("Alice");          // remove first match
 names.RemoveAt(0);              // remove by index
 names.RemoveAll(n => n.StartsWith("D"));
 names.Clear();
-var countListItems = names.Count; //Count is a property for lists, different for Count() for iterable collections
+var countListItems = names.Count; //Count is a property for list-s, different for Count() for iterable collections
 names.Sort();
 names.Reverse();
+names.ForEach(name => Console.Write(name + " "));
 
 //looping through list
 foreach (var letter in letters)
     Console.WriteLine(letter);
-
 
 //Search capabilities
 var index = names.IndexOf("Felipe"); //If the item isn't in the list, IndexOf returns -1.
@@ -313,11 +324,12 @@ bool has = list.Contains("Alice");
 bool any = list.Exists(n => n.Length > 4);
 string found = list.Find(n => n[0] == 'B'); 
 
+// .. spread element to expand a collection (C# 12+)
+List<string> moreNames = [.. names, "Roger", "Xavier"];
 
-// .. spread element to expand a collection
-IEnumerable<int> moreNumbers = [.. numbers, 11, 12, 13];
-IEnumerable<string> empty = [];                        
-IEnumerable<int> evenNumbers = Enumerable.Range(1, 5).Where(n => n % 2 == 0);
+//Combine list(s) (C# 12+)
+List<string> lastNames = ["Johnson", "Harris", "Ovechkin", "O'Brien"];
+var fullNames = [.. names, .. lastNames];
 
 //get the sequence iterator that can move through the collection one element at a time
 //enumerator starts before the first element.
@@ -399,9 +411,30 @@ Dictionary<string, int> ages = new Dictionary<string, int>
     ["David"] = 20
 };
 
+//Quick print to screen
+Console.WriteLine($"Dictionary [key, value] pairs: {string.Join(", ", ages)}");
+
+// Properties
+int count = ages.Count;                           // Number of items
+ICollection<string> keys = ages.Keys;             // All keys
+ICollection<int> values = ages.Values;            // All values
+IEqualityComparer<string> comparer = ages.Comparer; // Key comparer
+
+// Methods
+ages.Add("Charlie", 35);                          // Add item
+bool added = ages.TryAdd("David", 40);            // Safe add (C# 7.0+)
+bool removed = ages.Remove("Bob");                // Remove item
+ages.Clear();                                     // Remove all items
+bool hasKey = ages.ContainsKey("Alice");        // Check key exists
+bool hasValue = ages.ContainsValue(25);           // Check value
+bool success = ages.TryGetValue("Alice", out int age);  // Safe get
+int charlieAge = ages.GetValueOrDefault("Charlie", 0);  //Get value or default
+
+// Check empty Dict
+bool isEmpty = ages.Count == 0;
+
 // Add method - throws exception if key exists
 ages.Add("Alice", 25);
-ages.Add("Bob", 30);
 
 // Index operator - overwrites if key exists
 ages["Charlie"] = 35;
@@ -431,19 +464,18 @@ else
     Console.WriteLine("Alice not found");
 }
 
-// Check if key exists first
-if (ages.ContainsKey("Bob"))
-{
-    int bobAge = ages["Bob"];
-}
+// Check if key exists
+bool hasAlice = ages.ContainsKey("Alice");  // true
+bool hasEve = ages.ContainsKey("Eve");      // false
 
-// Get value or default
-int charlieAge = ages.GetValueOrDefault("Charlie", 0);  // Returns 0 if not found
+// Check if value exists (slower - O(n))
+bool has25 = ages.ContainsValue(25);  // true
+bool has40 = ages.ContainsValue(40);  // false
 
 // Update using index operator
 ages["Alice"] = 26;
 
-// Update if exists, add if not
+// Update if exists, if not then add other value
 ages["Charlie"] = ages.ContainsKey("Charlie") ? ages["Charlie"] + 1 : 35;
 
 // Conditional update
@@ -468,28 +500,12 @@ if (ages.Remove("Charlie", out int charlieAge))
     Console.WriteLine($"Removed Charlie, age {charlieAge}");
 }
 
-// Clear all items
-ages.Clear();
-
-// Remove items matching condition
-var keysToRemove = ages.Where(x => x.Value < 30).Select(x => x.Key).ToList();
-foreach (var key in keysToRemove)
+// Remove items matching condition - removing keys without ToList() will throw an exception
+foreach (var key in ages.Keys.ToList())
 {
-    ages.Remove(key);
+    if(ages[key] > 30)
+        ages.Remove(key);
 }
-
-// Check if key exists
-bool hasAlice = ages.ContainsKey("Alice");  // true
-bool hasEve = ages.ContainsKey("Eve");      // false
-
-// Check if value exists (slower - O(n))
-bool has25 = ages.ContainsValue(25);  // true
-bool has40 = ages.ContainsValue(40);  // false
-
-// Check count
-int count = ages.Count;  // 2
-bool isEmpty = ages.Count == 0;
-
 
 // Iterate through key-value pairs
 foreach (KeyValuePair<string, int> kvp in ages)
@@ -521,6 +537,15 @@ foreach (int age in ages.Values)
     Console.WriteLine(age);
 }
 
+//(shallow copy) - copy a dictionary into another one using the ctor
+var copyDict = new Dictionary<string, int>(ages);
+
+//deep copy - You must clone values manually
+var deepCopy = ages.ToDictionary(
+    kvp => kvp.Key,
+    kvp => new Person { Name = kvp.Value.Name, Age = kvp.Value.Age }
+);
+
 // Using LINQ
 ages.ToList().ForEach(kvp => Console.WriteLine($"{kvp.Key}: {kvp.Value}"));
 
@@ -531,33 +556,17 @@ List<KeyValuePair<string,int>> keyValuePairList = [
     
 Dictionary<string,int> people = keyValuePairList.ToDictionary(x => x.Key, x => x.Value);
 
-// Properties
-int count = ages.Count;                           // Number of items
-ICollection<string> keys = ages.Keys;             // All keys
-ICollection<int> values = ages.Values;            // All values
-IEqualityComparer<string> comparer = ages.Comparer; // Key comparer
-
-// Methods
-ages.Add("Charlie", 35);                          // Add item
-bool removed = ages.Remove("Bob");                // Remove item
-ages.Clear();                                     // Remove all items
-bool hasKey = ages.ContainsKey("Alice");          // Check key
-bool hasValue = ages.ContainsValue(25);           // Check value
-bool success = ages.TryGetValue("Alice", out int age);  // Safe get
-bool added = ages.TryAdd("David", 40);            // Safe add (C# 7.0+)
-
-
 // Filter by value
 var adults = ages.Where(x => x.Value >= 30).ToDictionary(x => x.Key, x => x.Value);
 
 // Filter by key
-var namesWithA = ages.Where(x => x.Key.StartsWith("A")).ToDictionary(x => x.Key, x => x.Value);
+var namesWithA = ages.Where(x => x.Key.StartsWith('A')).ToDictionary(x => x.Key, x => x.Value);
 
 // Get all values above threshold
 var agesOver25 = ages.Where(x => x.Value > 25).Select(x => x.Value).ToList();
 
 // Get all keys
-var allNames = ages.Keys.ToList();
+var allNames = ages.Keys; //directly accesses the dictionary’s key collection
 var namesList = ages.Select(x => x.Key).ToList();
 
 // Order by value
@@ -567,8 +576,12 @@ var orderedByAge = ages.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Va
 var orderedByName = ages.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
 
 // Get max/min
-var maxAge = ages.Max(x => x.Value);
+var maxAge = ages.Max(x => x.Value); //returns an int value
 var oldestPerson = ages.FirstOrDefault(x => x.Value == ages.Max(v => v.Value));
+
+//The following return the whole KeyValuePair sequence, not just the value
+var youngest = ages.MinBy(x => x.Value); // David, 20
+var oldest   = ages.MaxBy(x => x.Value); // Charlie, 35
 
 // Sum all values
 var totalAge = ages.Sum(x => x.Value);
@@ -598,12 +611,35 @@ Console.WriteLine(dict["ALICE"]);  // 30
 //Is unordered
 //Provides very fast lookups (typically O(1))
 
-var set = new HashSet<int> { 1, 2, 3, 3 }; //Result: {1, 2, 3}
+
+var emptySet = new HashSet<int>();
+var hashSet = new HashSet<int> { 1, 1, 2, 3, 3 }; //Result: {1, 2, 3}
  
- 
- 
- 
- 
+var set2 = new List<int> {1, 1, 2, 3, 3 }.ToHashSet(); 
+
+//Common methods
+bool added = hashSet.Add(5); 
+bool removed = hashSet.Remove(5);  
+bool containsHashValue = hashSet.Contains(5);  
+hashSet.Clear();
+int countElements = hashSet.Count;
+
+//Set operations
+hashSet.UnionWith(set2);            //Adds all elements from other → A ∪ B
+hashSet.IntersectWith(set2);        //Keeps only shared elements → A ∩ B
+hashSet.ExceptWith(set2);           //Removes elements found in other → A − B
+hashSet.SymmetricExceptWith(set2);  //Keeps elements in either but not both → A △ B
+
+//Comparison methods
+hashSet.IsSubsetOf(set2);
+hashSet.IsSupersetOf(set2);
+hashSet.Overlaps(set2);             //True if A and B share at least one element
+hashSet.SetEquals(set2);            //True if A and B contain exactly the same elements
+
+
+
+
+
 /********************************************************************
  *                          Loops & Sequences                       *
  ********************************************************************/
@@ -960,12 +996,17 @@ public static async Task<int> GetPageLengthAsync(string endpoint)
 
 
 /********************************************************************
- *                                  LINQs                          *
+ *                     LINQs & Collections                          *
  ********************************************************************/
 
 
 
-List<int> scores = [97, 12, 34, 67];
+IEnumerable<int> scores = [97, 12, 34, 67];
+
+//declaring an Enumerable empty collection
+IEnumerable<string> emptyList = Enumerable.Empty<string>();
+IEnumerable<string> empty = [];  
+IEnumerable<int> moreScores = [.. scores, 11, 12, 13];                      
 
 //LINQ Query syntax
 IEnumerable<string> scoreQuery =
@@ -973,6 +1014,12 @@ IEnumerable<string> scoreQuery =
     where score > 80
     orderby score descending
     select $"The score is {score}";
+
+//Print LINQ - deferred iterable execution
+Console.WriteLine(string.Join(", ", scores));
+
+foreach(var item in scores)
+    Console.WriteLine($"{item}");
 
 //Transforms each element
 var squares = numbers.Select(n => n * n);
@@ -990,7 +1037,7 @@ var scoreQueryList = scores.OrderByDescending(s => s);
 List<Person> people = [];
 var sortedTwice = people.OrderBy(p => p.Name).ThenBy(p => p.FullName);
 
-// All items in one flat list
+// All items in one flat list - i.e. takes a list of list(s), and flatten it into one IEnumerable
 var flatList = names.SelectMany(name => name);  
 
 // Using SelectMany to flatten the nested structure
@@ -1088,7 +1135,11 @@ HashSet<int> hashedNums = numbers.ToHashSet();  // HashSet<T>
 //Generates sequence of integers
 IEnumerable<int> quickSequence = Enumerable.Range(1, 5); // [1, 2, 3, 4, 5]
 
+IEnumerable<int> evenNumbers = Enumerable.Range(1, 5).Where(n => n % 2 == 0);
 
+// Converts IEnumerable<int> → IEnumerable<int?>
+// treat every element as this type going forward.
+List<int?> nullableScores = scores.Cast<int?>().ToList();
 
 
 
