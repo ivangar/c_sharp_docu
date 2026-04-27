@@ -8,8 +8,12 @@ using System.Globalization;
 using System.Reflection;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.RegularExpressions;
 
-/* Printing */
+
+/********************************************************************
+ *                               Printing                           *
+ ********************************************************************/
 
 //Printing in Console without closing console
 var helloWorld = "Hello World";
@@ -25,6 +29,46 @@ Console.WriteLine(
     $"Congratulations {firstName}, " +
     $"you have created your first account with a balance of {number}. " +
     $"Your BankAccountId is .");
+
+//Formatting => {value:FORMAT}
+
+//format a decimal (or double) as currency with standard numeric format s-trings
+decimal balance = 1234.56m;
+Console.WriteLine(balance.ToString("C", CultureInfo.GetCultureInfo("en-CA")));
+Console.WriteLine(balance.ToString("C", CultureInfo.CurrentCulture));
+
+//Fixed-point (F)
+Console.WriteLine($"{value:F0}"); // 2.0339497 -> 2
+Console.WriteLine($"{value:F2}"); // 2.0339497 -> 2.03
+
+//Number (N)
+Console.WriteLine($"{value:N2}"); // 12345.678 → 12,345.68
+
+//Currency (C)
+Console.WriteLine($"{value:C}"); // 123.45 → $123.45
+
+//Percentage (P)
+Console.WriteLine($"{value:P}"); // 0.85 → 85.00%
+
+//General (G)
+Console.WriteLine($"{value:G}");
+
+//Exponential / Scientific (E)
+Console.WriteLine($"{value:E2}"); // 12345 → 1.23E+004
+
+//Integer with leading zeros (D)
+Console.WriteLine($"{value:D5}"); // 42 → 00042
+
+//Custom numeric format
+// 0 → required digit
+// # → optional digit
+Console.WriteLine($"{value:0.00}"); // 1234.5 → 1234.50
+Console.WriteLine($"{value:#,##0.00}"); //1234.5 → 1,234.50
+
+//Aligning Output
+Console.WriteLine($"{value, 10}"); // right-aligned
+Console.WriteLine($"{value, -10}"); // left-aligned
+
 
 
 
@@ -58,13 +102,48 @@ Math.Max(5, 3);
 Math.Pow(3, 2);
 Math.Sqrt(2);
 Math.Round(3.7);
+double rounded = Math.Round(12.5879, 2, MidpointRounding.AwayFromZero);
 double pi = Math.PI;
+int clamped = Math.Clamp(19, 0, 100);
 
+        //GUID => System.Guid struct => never null!
 
-//format a decimal (or double) as currency with standard numeric format s-trings
-decimal balance = 1234.56m;
-Console.WriteLine(balance.ToString("C", CultureInfo.GetCultureInfo("en-CA")));
-Console.WriteLine(balance.ToString("C", CultureInfo.CurrentCulture));
+Guid guid = Guid.NewGuid();
+Guid emptyguid = Guid.Empty; //// 00000000-0000-0000-0000-000000000000
+
+string guidString = guid.ToString(); 
+
+//Parse from string
+Guid g = Guid.Parse("3f2504e0-4f89-11d3-9a0c-0305e82c3301");
+
+// Safe parse (no exception)
+if (Guid.TryParse(guidString, out Guid g2))
+    Console.WriteLine(g2);
+
+//From byte array
+byte[] bytes = new byte[16]; // fill bytes
+Guid g = new Guid(bytes);    
+
+// Back to bytes
+byte[] back = g.ToByteArray();
+
+//Check if a GUID has not been assigned yet
+var assignedGuid = guid == Guid.Empty;
+
+if (guid == Guid.Empty)
+    throw new Exception("Not assigned");
+
+int comparison = guid.CompareTo(g);
+
+guid.ToString("N");  // no dashes → 3f2504e04f8911d39a0c0305e82c3301
+guid.ToString("B");  // braces   → {3f2504e0-4f89-11d3-9a0c-0305e82c3301}
+guid.ToString("P");  // parens   → (3f2504e0-4f89-11d3-9a0c-0305e82c3301)
+
+//Equality
+bool eq  = guid == g;        
+bool neq = guid != g;         
+bool eq2 = guid.Equals(g);   
+
 
 
 
@@ -77,7 +156,7 @@ Console.WriteLine(balance.ToString("C", CultureInfo.CurrentCulture));
 
 
 char character = 'a';
-char nullCharacter = default;
+char nullCharacter = default; //'\0'
 string firstName2 = "John";
 var emptyStr = "";
 string? returnEmptyStr = String.Empty; //usually when return from method expects a string
@@ -119,11 +198,11 @@ var isLetterOrDigit = char.IsLetterOrDigit(character);
 char[] chars = helloWorld.ToCharArray(); //Copies the characters to a Unicode char[].
 var lowerCaseStr = helloWorld.ToLowerInvariant(); //Same as string.ToLower()
 var upperCaseStr = helloWorld.ToUpperInvariant(); //Same as string.ToUpper()
-
+int compareString = string.Compare("apple", "banana"); // (–1, 0, 1) negative 
 
 // Split the line based on delimiters
 string[] parts = helloWorld.Split(',');
-public int WordCount() => helloWorld.Split([' ', '.', '?'], StringSplitOptions.RemoveEmptyEntries).Length;
+int WordCount() => helloWorld.Split([' ', '.', '?'], StringSplitOptions.RemoveEmptyEntries).Length;
 
 //joins a collection into a single string with separator.
 var joinedStr = string.Join(", ", new[] { "A", "B", "C" }); // "A, B, C"
@@ -167,9 +246,15 @@ s[..5]; // "Hello"
 s[^5..]; // "World"
 
 
+
+
+
+
+
 /********************************************************************
  *                               Type Conversion                    *
  ********************************************************************/
+
 
 
 //Convert a string to an int
@@ -191,6 +276,20 @@ float myFloat = (float)myInt;
 int piCast = (int)Pi;
 byte byteCast = (byte)MaxZoom;
 var checkedVar = checked(Pi + number);
+var def = default(int);
+var nullForgivingOperator = default(int)!; //suppresses null compiler warnings
+
+            //Parameters by reference
+
+// ref — must be initialized, can read AND write
+void WithRef(ref int x) => x += 10;
+
+// out — doesn't need to be initialized, MUST be written inside
+void WithOut(out int x) => x = 99;
+
+// in — must be initialized, READ ONLY (no modification allowed)
+void WithIn(in int x) => Console.WriteLine(x); // can't write to x
+
 
 
 
@@ -241,7 +340,7 @@ int idx = Array.IndexOf(numbers, 3);   // find index
 int bi  = Array.BinarySearch(numbers, 3); // requires sorted
 bool ex = Array.Exists(numbers, n => n > 3);
 var value = numbers.ElementAtOrDefault(Array.IndexOf(numbers, 3));  //Returns default value instead of throwing.
-
+byte[] byteArray = new byte[16]; // fill bytes
 
 //Copying an array to a new reference array, now these are 2 different object references
 //use Clone() in older code or for compatibility reasons
@@ -333,18 +432,18 @@ var fullNames = [.. names, .. lastNames];
 
 //get the sequence iterator that can move through the collection one element at a time
 //enumerator starts before the first element.
-using var firstIterator = evenNumbers.GetEnumerator();
+using var enumerator = evenNumbers.GetEnumerator();
 
 //Advances the iterator to the next element
-bool moveTrueOrFalse = firstIterator.MoveNext();
+bool moveTrueOrFalse = enumerator.MoveNext();
 
 //Gets the element at the current position of the iterator.
-var currentElement = firstIterator.Current;
+var currentElement = enumerator.Current;
 
 //iterating with IEnumerator<T>
-while (firstIterator.MoveNext())
+while (enumerator.MoveNext())
 {
-    var current = firstIterator.Current;
+    var current = enumerator.Current;
     Console.WriteLine(current);
 }
 
@@ -385,6 +484,9 @@ Dictionary<string, string> collectionDict = [];
 
 // Case-insensitive string keys
 Dictionary<string, int> dict = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+//Sorted Dictionary - sorted on the key
+var phoneBook = new SortedDictionary<string, string>();
 
 // Collection initializer
 Dictionary<string, int> ages = new Dictionary<string, int>
@@ -617,9 +719,24 @@ var hashSet = new HashSet<int> { 1, 1, 2, 3, 3 }; //Result: {1, 2, 3}
  
 var set2 = new List<int> {1, 1, 2, 3, 3 }.ToHashSet(); 
 
+//Gets the equality comparer used (e.g., case-insensitive)
+var comparer = set.Comparer;
+
+//Case-insensitive sets
+var nameSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+{
+    "Ivan",
+    "ivan"
+};
+
+//Create HashSet based on a list
+var duplicates = new List<int> { 1, 2, 2, 2, 3 };
+var uniqueSet = new HashSet<int>(duplicates); //1, 2, 3
+
 //Common methods
 bool added = hashSet.Add(5); 
 bool removed = hashSet.Remove(5);  
+int removed = hashSet.RemoveWhere(x => x % 2 == 0);
 bool containsHashValue = hashSet.Contains(5);  
 hashSet.Clear();
 int countElements = hashSet.Count;
@@ -641,7 +758,7 @@ hashSet.SetEquals(set2);            //True if A and B contain exactly the same e
 
 
 /********************************************************************
- *                          Loops & Sequences                       *
+ *                          Loops & Iterators                       *
  ********************************************************************/
 
 
@@ -688,31 +805,103 @@ static IEnumerable<int> GetNumbers()
     }
 }
 
+static IEnumerable<int> InfiniteCounter()
+{
+    int i = 0;
+    while (true)
+        yield return i++;
+}
 
 //await foreach
 static async IAsyncEnumerable<int> ReadSequenceAsync()
 {
-    foreach (var item in await nextChunk)
+    foreach (var item in await nextChunk())
     {
+        //Use Task.Delay inside async code for testing awaitable delays
+        await Task.Delay(3000);
+
+        if (item is null) 
+            yield break; // stop iteration
+
         yield return item; //return an iterator that provides access to each element when it's available
     }
 }
 
+//data is streamed asynchronously
 await foreach (var yieldedNumber in ReadSequenceAsync())
    { Console.WriteLine(yieldedNumber); }
 
 
+//More asynchronous iterators
+async IAsyncEnumerable<int> GenerateNumbersAsync(int count)
+{
+    for (int i = 0; i < count; i++)
+        yield return await ProduceAsync(i);
+}
+
+async Task<int> ProduceAsync(int seed)
+{
+    await Task.Delay(1000);
+    return seed * 2;
+}
+
+//Handle reading input from standard input (stdin) 
+while (Console.ReadLine() is string line && line.Length > 0)
+{
+    Console.WriteLine(line);
+}
+
+
+//The using statement ensures the correct use of an IDisposable instance
+//Here for example: when the control leaves the block of the using statement, an opened file is closed
+using (StreamReader reader = File.OpenText("numbers.txt"))
+{
+    string line;
+    while ((line = reader.ReadLine()) is not null)
+    {
+        if (int.TryParse(line, out int number))
+        {
+            numbers.Add(number);
+        }
+    }
+}  // reader.Dispose() is automatically called here
+
+//Modern C# also supports the declaration form (no braces needed):
+using var reader = File.OpenText("numbers.txt"); 
+
 
 //Recursive algorithms (e.g., tree traversal)
-IEnumerable<Node> Traverse(Node node)
+static IEnumerable<Node> Traverse(Node node)
 {
     yield return node;
+
     foreach (var child in node.Children)
-    {
         foreach (var descendant in Traverse(child))
-        {
             yield return descendant;
-        }
+}
+
+//Return lazy sequence instead of a list
+static IEnumerable<string> Suits()
+{
+    yield return "clubs";
+    yield return "diamonds";
+    yield return "hearts";
+    yield return "spades";
+}
+
+foreach (var suit in Suits())
+    Console.WriteLine($" Suit : {card.Suit}");
+
+
+//you can implement GetEnumerator()
+class NumberBox
+{
+    private readonly int[] _values = { 1, 2, 3, 4 };
+
+    public IEnumerator<int> GetEnumerator()
+    {
+        foreach (var v in _values)
+            yield return v;
     }
 }
 
@@ -724,20 +913,114 @@ IEnumerable<Node> Traverse(Node node)
  *                                Dates                          *
  ********************************************************************/
 
-var myDate = new DateTime(1989, 5, 10);
-DateTime date = DateTime.Now;
 
-//Converts the string representation of a date and time to its DateTime equivalent
-var releaseDate = DateTime.Parse("1989-2-12");
+var dt = new DateTime(); //Min value date 1/1/0001 12:00:00 AM
+var newDateTime = new DateTime(1989, 5, 10);
+var exactDateTime = new DateTime(2025, 4, 9, 14, 30, 0); //+ hour, min, sec
+DateTime now = DateTime.Now; //Local date + time
+DateTime utcNow = DateTime.UtcNow; //UTC date + time
+DateTime today = DateTime.Today; //Today at 00:00:00
+DateTime minValue = DateTime.MinValue; //Boundary sentinels
+DateTime maxValue = DateTime.MaxValue; //Boundary sentinels
 
-Console.Write($"{date:yyyy-MM-dd}"); // 2025-09-13
-Console.Write($"{date:MMM dd, yyyy}"); // Sep 13, 2025
-Console.Write($"{date:HH:mm:ss}"); // 14:30:25
+//Properties
+int year = newDateTime.Year;
+int month = newDateTime.Month;
+int day = newDateTime.Day;
+int hour = newDateTime.Hour;
+int minute = newDateTime.Minute;
+int second = newDateTime.Second;
+long ticks = newDateTime.Ticks;
+DayOfWeek dayOfWeek = newDateTime.DayOfWeek; //DayOfWeek enum (0=Sunday)
+int dayOfYear = newDateTime.DayOfYear; //1–366
+DateTime dateMidnight = newDateTime.Date; //Same date, time 00:00:00
+TimeSpan year = newDateTime.TimeOfDay;
+DateTimeKind kind = newDateTime.Kind; //Local / Utc / Unspecified
 
-var dateMorning = new DateTime(2025, 9, 25, 8, 30, 0);  // Thursday 8:30 AM
-var dateEvening = new DateTime(2025, 9, 25, 17, 45, 0);  // Thursday 5:45 PM  
+//Types
+var dateTime = DateTime(); //Date + time, no timezone
+var dateOnly = DateOnly(); //Date only
+var timeOnly = TimeOnly(); //time only
+var dateTimeOffset = DateTimeOffset(); //DateTime + UTC offset
+var timeSpan = TimeSpan(); // Duration / difference
 
-Console.WriteLine($"Testing: {dateMorning:dddd, MMMM dd, yyyy HH:mm}");
+//Add/Subtract methods
+DateTime addYears = newDateTime.AddYears(3);
+DateTime addMonths = newDateTime.AddMonths(12);
+DateTime addDays = newDateTime.AddDays(30); //Negative = subtract
+DateTime addHours = newDateTime.AddHours(18);
+DateTime addMinutes = newDateTime.AddMinutes(59);
+DateTime AddSeconds = newDateTime.AddSeconds(60);
+DateTime addTimeSpan = newDateTime.Add(10000000); //Add any TimeSpan
+TimeSpan subtractDate = newDateTime.Subtract(exactDateTime);
+
+//Compare dates
+int compareDates = DateTime.Compare(newDateTime, exactDateTime); //–1, 0, 1
+int dateCompareTo = newDateTime.CompareTo(exactDateTime);
+bool dateEquals = newDateTime.Equals(exactDateTime);
+bool operatorDateEquals = newDateTime == exactDateTime;
+bool operatorDateNotEquals = newDateTime != exactDateTime; //also: a < b, a > b, a <= b, a >= b
+TimeSpan dateDifference = newDateTime - exactDateTime;
+
+//Parse & Convert
+DateTime parsedDate = DateTime.Parse("1989-2-12");
+bool tryParsedDate = DateTime.TryParse("1989-2-12", out dt);
+DateTime parsedExact = DateTime.ParseExact("1989-2-12", "yyyy-MM-dd", ci);
+bool tryParsedExact = DateTime.TryParseExact("1989-2-12", "yyyy-MM-dd", ci, out dt);
+DateTime localTime = DateTime.ToLocalTime();
+DateTime utcTime = DateTime.ToUniversalTime();
+long windowsFileTime = DateTime.ToFileTime(); //Windows File Time
+double OLEAutomationdate = DateTime.ToOADate(); //OLE Automation date
+
+//Formatting (ToString) -> You can just print the date without convert toString()
+string shortDate = newDateTime.ToString("d"); //Short date: 4/10/2026
+string longDate = newDateTime.ToString("D"); //Long date: Friday, April 10, 2026
+string shortTime = newDateTime.ToString("t"); //Short time: 11:12 AM
+string longTime = newDateTime.ToString("T"); //long time: 11:12:00 AM
+string fullDate = newDateTime.ToString("f"); //Full date + time: Friday, April 10, 2026 11:12 AM
+string generalShort = newDateTime.ToString("g"); //General short: 4/10/2026 11:12 AM
+string generalLong = newDateTime.ToString("G"); //General long (Default print format): 4/10/2026 11:12:00 AM
+string sortableIso = newDateTime.ToString("s"); //Sortable (ISO-like): 2026-04-10T15:12:00
+string roundTripISO = newDateTime.ToString("o"); //Round-trip ISO 8601: 2026-04-10T15:12:00.000Z
+string monthDay = newDateTime.ToString("M"); //Month and day: April 10
+string yearMonth = newDateTime.ToString("Y"); //Year and month: April 2026
+string RFC1123 = newDateTime.ToString("R"); //RFC 1123: Fri, 10 Apr 2026 15:12:00 GMT
+string universalSortable = newDateTime.ToString("u"); //Universal sortable: 2026-04-10 15:12:00Z
+string customPatternDate = newDateTime.ToString("yyyy-MM-dd HH:mm:ss"); //Custom pattern: 2026-04-10 11:12:00
+
+if (newDateTime.HasValue)
+    Console.WriteLine(newDateTime.Value.ToString("D"));
+
+//TimeSpan
+var newTimeSpan = new TimeSpan(12,7,45);
+var fromDays = TimeSpan.FromDays(15);
+var fromHours = TimeSpan.FromHours(45);
+var days = TimeSpan.Days;
+var timeSpanHours = TimeSpan.Hours;
+var timeSpanMinutes = TimeSpan.Minutes;
+var timeSpanSeconds = TimeSpan.Seconds;
+var totalDays = TimeSpan.TotalDays; 
+var totalHours = TimeSpan.TotalHours; 
+var totalMinutes = TimeSpan.TotalMinutes;
+
+//Calendar helpers
+bool isLeapYear = DateTime.IsLeapYear(2026);
+int daysInMonth = DateTime.DaysInMonth(2026, 5);
+
+//DateTimeOffset & TimeZones
+DateTimeOffset dateTimeOffset = DateTimeOffset.Now; //4/12/2026 2:08:19 PM -04:00
+DateTimeOffset dateTimeOffsetUTC = DateTimeOffset.UtcNow; //4/12/2026 6:08:19 PM +00:00
+TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("3");
+TimeZoneInfo.ConvertTime(dt, tz);
+TimeZoneInfo.ConvertTimeToUtc(dt, tz);
+TimeZoneInfo.Local;
+TimeZoneInfo.Utc;
+
+//Format output
+Console.Write($"{newDateTime:yyyy-MM-dd}"); // 2025-09-13
+Console.Write($"{newDateTime:MMM dd, yyyy}"); // Sep 13, 2025
+Console.Write($"{newDateTime:HH:mm:ss}"); // 14:30:25
+
 
 
 
@@ -768,9 +1051,14 @@ MyCar NewCar = new();
 NewCar.Brand("Audi");
 
 //Inline param obj instantiation
-public void CallMethod(Person person) { };
+void CallMethod(Person person) { };
 
 CallMethod(new Person() { FirstName = "Ivan", LastName = "Garzon" });
+
+//With ref — passes the REFERENCE, original is modified
+void ModifyReference(ref int y) => y = 10;
+int b = 5;
+ModifyReference(ref b);
 
 //using primary constructor (new in C# 12)
 public class Person(string firstName, string lastName, MyCar car)
@@ -897,6 +1185,27 @@ return 1;
 Type t = typeof(Pet);
 MemberInfo[] members = t.GetMembers();
 
+// Local Functions
+public class LocalMethodExample
+{
+    public static void OuterMethod()
+    {
+        //A local function is a method declared inside another method.
+        void InnerHelper()
+        {
+            Console.WriteLine("I'm inside OuterMethod");
+        }
+
+        InnerHelper();
+    }
+}
+
+//Extension methods (Must be in a static class)
+public static class Extensions
+{
+    public static int Square(this int x) => x * x; //has to be static
+}
+
 
 
 
@@ -963,7 +1272,46 @@ int unboxedGenericNumber = (T)boxedInt; //Using generics
 
 
 
-                                                   /* Events & Delegates */
+
+/********************************************************************
+ *                     Events & Delegates                           *
+ ********************************************************************/
+
+
+
+//C#'s built-in delegate type
+Func<T, TResult> square = x => x * x; //T is input, TResult is output
+
+//Takes T, returns nothing
+Action<T>;
+
+//Takes T, returns bool
+Predicate<T>;
+
+
+//Example of a method that takes a delegate function
+static IEnumerable<TResult> Transform<T, TResult>(
+    IEnumerable<T> source,      // 1. a list of any type T
+    Func<T, TResult> selector   // 2. a method that converts T → TResult
+)
+{
+    foreach (var element in source)
+        yield return selector(element); // 3. apply the method to each element lazily
+}
+
+// 3 Ways to Pass a Delegate
+
+var delegateList = new List<string> { "Alice", "Bob", "Jasmine" };
+
+//1. Named method
+static int GetLength(string s) => s.Length;
+var result = Transform(delegateList, GetLength);
+
+//2. Anonymous method
+var result = Transform(delegateList, delegate(string s) { return s.Length; });
+
+//3. Lambda (most common in modern C#)
+var result = Transform(names, s => s.Length);
 
 //Define a delegate method for the Subscribers (not needed anymore)
 public delegate void VideoEncodedEventHandler(object source, VideoEventArgs args);
@@ -981,7 +1329,7 @@ protected virtual void OnVideoEncoded(){}
 publisher.VideoEncoded += subscriber.OnVideoEncoded;
 
 
-                                                    /*  Automated Test */
+                                                    /*  Automated Tests */
 
 
                                                     /* Task based asynchronous */
@@ -1027,6 +1375,13 @@ var squares = numbers.Select(n => n * n);
 //Filters elements based on a condition (ex: all the even numbers)
 var evenNumberList = numbers.Where(n => n % 2 == 0);
 
+//Filters elements based on a condition (ex: all the odd numbers)
+var oddNumberList = numbers.Where(n => n % 2 != 0);
+
+//Filters elements based on a condition (ex: all the prime numbers)
+var primes = Enumerable.Range(1, 19)
+                       .Where(n => !Enumerable.Range(2, (int)Math.Sqrt(n) - 1).Any(d => n % d == 0));
+
 //Sorts elements in ascending order
 var scoresOrderAlpha = scores.OrderBy(s => s); // Alphabetical order
 
@@ -1064,6 +1419,11 @@ var onlyInts = scores.OfType<int>();  // Only integers from mixed collection
 // Reverses order
 var reversedOrdered = numbers.Reverse(); // [5, 4, 3, 2, 1]
 
+//Compares two sequences element by element
+var a = "hello";
+var b = "hello";
+a.SequenceEqual(b); // true  — same chars, same order
+
 //Takes until condition fails
 var takeNumWhile = numbers.TakeWhile(n => n < 5);  // [1, 2, 3, 4]
 
@@ -1076,12 +1436,21 @@ var countNumbers = numbers.Count();
 //sum numbers
 var sumNums = numbers.Sum();  // 55
 
+//Returns the only element of a sequence or throws exception
+var single = numbers.Single(x => x > 7 && x < 9);
+
 //Average of all elements
 var averageNums = numbers.Average();
 
 // Smallest/largest value
 int min = numbers.Min();  // 1
 int max = numbers.Max();  // 10
+
+//Aggregate (accumulator function) to multiply all numbers using a seed = 1
+int product = numbers.Aggregate(
+    1, 
+    (accumulated, x) => accumulated * x
+); 
 
 // First or default value
 var firstOrDefault = empty.FirstOrDefault(); // 0 (for int)
@@ -1116,15 +1485,18 @@ var commonSet = set1.Intersect(set2); // [2, 3]
 //Combines sequences (keeps duplicates)
 var combined = set1.Concat(set2);  // All elements from both
 
+//A − B (set difference) elements from set1 that are not present in set2
+var excludeElements = set1.Except(set2);
+
 //Groups by key
 people.GroupBy(p => p.LastName); // Groups: A-last name, B-last name, etc.
 
 //Inner Join
-people.Join(pet,
-    p => p.LastName,
+people.Join(
+    orders,
+    p => p.Id,
     o => o.CustomerId,
     (c, o) => new { c.Name, o.Total });
-
 
 //Converts to dictionary
 Dictionary<string, string> enumerableToDict = people.ToDictionary(p => p.LastName, p => p.FullName);
@@ -1145,59 +1517,194 @@ List<int?> nullableScores = scores.Cast<int?>().ToList();
 
 
 /********************************************************************
- *                                  Tuples                          *
+ *                      Tuples - ValueType<T1, T2,...>               *
  ********************************************************************/
 
 
+        //Value tuple literals
 
-// Each element of a tuple has a type and an optional name. It is mutable.
+// Unnamed
+var tuple = (42, "hello", 3.14);  // ValueTuple<int, string, double>
+
+//Access tuple with Item field
+string item = tuple.Item1; //"hello"
+
+// Explicit type
+(int X, int Y) pt = (10, 20);
+
+//The Tuple class does not itself represent a tuple, it provides static methods.
+var tuples = Tuple.Create(2, 3, 5, 7, 11, 13, 17, 19);
+Console.WriteLine($"{tuples.Item1}, {tuples.Item3}, {tuples.Item6}"); // 2, 5, 13
+
+// Each element of a tuple has a type and an optional name (Named Tuple). It is mutable.
 var pt = (X: 1, Y: 2);
 Console.WriteLine(pt.Y); // (1, 2)
-
-//with expression to create a modified copy of the existing tuple
-var pt2 = pt with { Y = 10 }; // (1, 10)
-
-// Modern tuple
-(string name, int age) personTuple = ("Alice", 30);
-Console.WriteLine($"{personTuple.name} is {personTuple.age} years old.");
-
-
-//Returning multiple values from a method
-(int sum, int product) Calculate(int a, int b)
-{
-    return (a + b, a * b);
-}
-
-//deconstructing a tuple
-var (sum, product) = Calculate(5, 6);
-(sum, int product) = Calculate(5, 6);
-
-//first and second values are discards
-(_, _, area) = city.GetCityInformation(cityName);
-Console.WriteLine($"The city are is {area}");
 
 //Quick grouping of values
 var student = ("Bob", 25, "Sociology");
 Console.WriteLine($"{student.Item1} studies {student.Item3}.");
 
-//Linq projections with tuples
+//value tuple instances are mutable
+pt.X = 4; // (X: 4, Y: 2)
+
+// copy tuples - copies the whole struct:
+var copyTuple = student; 
+
+
+        //Deconstruction
+
+
+//Deconstructed variable declaration
+var (X, Y) = (1, 2);
+Console.WriteLine($"tuple: ({X}, {Y})");
+
+//Deconstruct to existing vars
+int x, y;
+(x, y) = (5, 9);
+
+// Typed
+var t = (X: 3, Y: 4);
+(int a, int b) = t;
+
+// Discard unwanted
+var (_, yOnly) = t;
+
+// Nested deconstruct
+var ((r, g), alpha) = ((r: 255, g: 0), 1.0);
+
+//with expression to create a modified copy of the existing tuple
+var pt2 = pt with { Y = 10 }; // (1, 10)
+
+// Modern tuple - Explicit type
+(string name, int age) personTuple = ("Alice", 30);
+Console.WriteLine($"{personTuple.name} is {personTuple.age} years old.");
+
+//first and second values are discards
+(_, _, area) = city.GetCityInformation(cityName);
+Console.WriteLine($"The city are is {area}");
+
+
+            //Methods & returns
+
+//Returning multiple values from a method — Positional Tuple
+(int, int) Calculate(int a, int b)
+{
+    return (a + b, a * b);
+}
+
+//call positional tuple with deconstructing
+var (sum, product) = Calculate(5, 6);
+(sum, int product) = Calculate(5, 6);
+
+//Returning multiple values from a method -  Named Tuple (Recommended)
+(int sum, int product) Calculate(int a, int b)
+{
+    return (
+        sum: a + b,
+        product: a * b
+    );
+} 
+
+var namedTuple = Calculate(2, 3);
+
+//As method parameter
+double Distance((int X, int Y) a, (int X, int Y) b)
+{
+    int dx = a.X - b.X;
+    int dy = a.Y - b.Y;
+    return Math.Sqrt(dx*dx + dy*dy);
+}
+
+
+        //projections 
+
+//projections with tuples
 var names2 = new[] { "Alice", "Bob", "Charlie" };
-var results = names2.Select(n => (Original: n, Length: n.Length)).ToList();
+var results = names2.Select(n => (Name: n, Length: n.Length)).ToList();
 Console.WriteLine(results[1]); //(Alice, 5)
+
+//using ForEach lambda to Loop through each tuple
+results.ForEach(client => Console.WriteLine($"{client.Name} - {client.Length}"));
+
+//using a foreach loop on a collection of tuples 
+foreach (var (name, length) in results)
+    Console.WriteLine($"{name} - {length}");
+
+//Linq projection with indexed Select
+var result = names
+    .Select((n, i) => (Index: i, Upper: n.ToUpper()))
+    .Where(t => t.Index > 0);
+
+//List of tuples
+var pts = new List<(int X, int Y)>
+{
+    (1, 2), (3, 4), (5, 6), (3,4), (10,6)
+};
+
+//Tuple dictionary
+var tupleDict = new Dictionary<(int X, int Y), string>();
+
+tupleDict[(0, 0)] = "origin";
+tupleDict[(1, 2)] = "point";
+
+
+    //Equality & struct semantics
+
+var a = (X: 1, Y: 2);
+var b = (1, 2);
+
+bool eq = (a == b);    // true (C# 7.3+)
+bool neq = (a != b);   // false
+
+
+        //Type aliases (C# 12)
+
+// scroll to top for Global using alias
+// using Point = (int X, int Y);
+// using RGB   = (byte R, byte G, byte B);
+Point origin = (0, 0);
+RGB   red    = (255, 0, 0);
+
+
+//Custom deconstruct
+
+class Point {
+  public int X, Y;
+
+  public void Deconstruct(out int x, out int y)
+    => (x, y) = (X, Y);
+}
+
+var (x, y) = new Point
+{
+    X=3,
+    Y=4
+};
+
+
 
 
 
 
 
 /********************************************************************
- *                          Records types                           *
+ *                  Records types (class or struct)                 *
  ********************************************************************/
 
 
 
 //Use a record for immutable data models (e.g., DTOs), pattern matching and deconstruction.
 //A record is a reference type, with value-based equality semantics by default
-public record PointImmutable(int X, int Y);
+public record Person(string FirstName, string LastName); //Immutable positional parameters
+
+var recordClass = new Person("Grace", "Hopper");
+
+//Standard property syntax
+public record Product
+{
+    public required string Name { get; init; }
+    public decimal Price { get; set; } //read/write
+}
 
 // You can add behavior to a record type by declaring members
 public record Point(int X, int Y)
@@ -1206,10 +1713,27 @@ public record Point(int X, int Y)
 }
 
 //A record struct is a struct type that includes the extra behavior added to all record types.
-public record struct PointStruct(int X, int Y)
+public record struct Coordinate(double Latitude, double Longitude)
 {
-    public double Slope() => (double)Y / (double)X;
+    public double Slope() => Latitude / Longitude;
 }
+
+public readonly record struct Temperature(double Celsius)
+{
+    public double Fahrenheit => Celsius * 9.0 / 5.0 + 32.0;
+}
+
+//record class vs. record struct
+
+// Record class
+var p1 = new Person("Ivan", "Garzon");
+var p2 = p1; // p1 and p2 point to the same object:
+
+// Record struct — assignment copies the data
+var c1 = new Coordinate(47.6062, -122.3321);
+var c2 = c1;
+c2.Longitude = 0.0; // mutating c2 doesn't affect c1
+
 
 var point1 = new Point(5,10);
 Point point2 = new(5, 10);//object initializer syntax, can be returned from a method : return new(5, 10);
@@ -1217,10 +1741,16 @@ Point point2 = new(5, 10);//object initializer syntax, can be returned from a me
 //this should print New point : Point { X = 5, Y = 10 }
 Console.WriteLine($" New point : {point1}");
 
+//Nondestructive mutation
 var point3 = point1 with { }; //not changing anything, so this is a shallow clone with all the same values
 var point4 = point1 with { X = 7 };
 
+//Equality works the same for record class & record struct
 Console.WriteLine(point1 == point2); // output: True if type name and properties are equal
+
+//Positional records generate a Deconstruct
+var (first, last) = person;
+Console.WriteLine($"{first} {last}");
 
 //switch objects at run time, to see if it's the specified type 
 public record Deposit(double Amount, string description);
@@ -1242,6 +1772,11 @@ public record PersonPrimaryCtor(string FirstName, string LastName)
     public required string[] PhoneNumbers { get; init; }
 }
 
+//Record inheritance
+public record ThreeDimensionPoint(int X, int Y, int Z) : Point(X, Y);
+
+
+
 
 
 
@@ -1255,36 +1790,41 @@ public record PersonPrimaryCtor(string FirstName, string LastName)
 int? maybe = 12;
 
 //declaration pattern
+//perform a cast conditionally only when it will succeed
 if (maybe is int numberCasted)
-{
     Console.WriteLine($"The nullable int 'maybe' has the value {numberCasted}");
-}
 
+//classic type checking
+if (maybe is int or long or decimal or float or double)
+    return val.ToString();
 
 string? message = ReadMessageOrDefault();
 
 if (message is null)
-{
     Console.WriteLine("null object");
-}
 
 // not logical pattern 
 if (message is not null)
-{
     Console.WriteLine(message);
+
+//return "is" as an expression evaluation from method
+bool IsValidScore(int score) => score is -1 or (>= 0 and <= 100);
+
+//The previous method syntax is similar to:
+static bool IsValidScore(int score)
+{
+    if(score is -1 or (>= 0 and <= 100))
+        return true;
+    else return false;
 }
 
 //The { } matches any non-null object
 if (observation.Annotation is { })
-{
     Console.WriteLine($"Observation description: {observation.Annotation}");
-}
-
 
 var dog = new Dog("Bark");
 var cat = new Cat("Meow");
 
-//perform a cast conditionally only when it will succeed
 //The is operator also tests an expression result against a pattern
 if (dog is Pet p)
     p.Breathe();
@@ -1303,6 +1843,32 @@ var hourOfDay = 12 switch
     > 16 and <= 19 => "evening rush hours",
     > 19 => "Late night"
 };
+
+string hourOfDay;
+int hour = 12;
+
+//Equivalent old-style switch
+switch (hour)
+{
+    case int h when h <= 7:
+        hourOfDay = "early morning";
+        break;
+    case int h when h > 7 && h <= 10:
+        hourOfDay = "morning rush hours";
+        break;
+    case int h when h > 10 && h <= 16:
+        hourOfDay = "regular hours";
+        break;
+    case int h when h > 16 && h <= 19:
+        hourOfDay = "evening rush hours";
+        break;
+    case int h when h > 19:
+        hourOfDay = "Late night";
+        break;
+    default:
+        hourOfDay = "unknown";
+        break;
+}
 
 string status = maybe switch
 {
@@ -1328,8 +1894,8 @@ string access = method switch
 string quadrant = point1 switch //could be any tuple grouping of values (0, 2, 3 ...)
 {
     (0, 0) => "Origin",
-    (_, 0) => "X-Axis",
-    (0, _) => "Y-Axis",
+    (var x, 0) => "X-Axis",
+    (0, var y) => "Y-Axis",
     _ => "Somewhere else"
 };
 
@@ -1398,7 +1964,7 @@ IEnumerable<string> ReadLines(string filePath)
 {
     // using statement automatically free nonmemory resources
     using var reader = new StreamReader(filePath);
-    string line;
+    string? line;
     while ((line = reader.ReadLine()) != null)
     {
         yield return line;
@@ -1481,6 +2047,7 @@ var enumInt = (int)FileMode.Create;
 /********************************************************************
  *                                   Structs                        *
  ********************************************************************/
+//structs are value types and are always copied without ref
 
 
 public struct Coords
@@ -1495,7 +2062,16 @@ public struct Coords
 }
 
 
+struct Vector2 { public float X, Y; }
 
+void Scale(ref Vector2 v, float factor)
+{
+    v.X *= factor; 
+    v.Y *= factor;
+}
+
+var position = new Vector2 { X = 3f, Y = 4f };
+Scale(ref position, 2f);// position  { X = 6, Y = 8 }
 
 
 
@@ -1517,31 +2093,6 @@ var repositories = await client.GetFromJsonAsync<List<object>>("https://api.gith
 
 
 
-
-
-/********************************************************************
- *                                Statements                        *
- ********************************************************************/
-
-
-//The using statement ensures the correct use of an IDisposable instance
-//Here for example: when the control leaves the block of the using statement, an opened file is closed
-using (StreamReader reader = File.OpenText("numbers.txt"))
-{
-    string line;
-    while ((line = reader.ReadLine()) is not null)
-    {
-        if (int.TryParse(line, out int number))
-        {
-            numbers.Add(number);
-        }
-    }
-}
-
-
-
-
-
 /********************************************************************
  *                                Regex                             *
  ********************************************************************/
@@ -1549,16 +2100,25 @@ using (StreamReader reader = File.OpenText("numbers.txt"))
 //need to use the Regex namespace before
 //using System.Text.RegularExpressions;
 
+//match words (ignores punctuation)
+var words = Regex.Matches(sentence, @"\b\w+\b").Select(m => m.Value);
+
+//match letters only
+var words = Regex.Matches(sentence, @"\b[a-zA-Z]+\b").Select(m => m.Value);
+
 
 
 
 /********************************************************************
- *                    file -based C# programs                        *
+ *                    file-based C# programs                        *
  ********************************************************************/
 
+//Create a cs-extension file anywhere
 
-//Command to run a file based program
-//dotnet buuild AsciiArt.cs (optional run command will first build and compile)
+//Commands to run a file based program
+
+//dotnet new console --use-program-main false (need to investigate this one)
+//dotnet build AsciiArt.cs (optional run command will first build and compile)
 //dotnet run AsciiArt.cs
 
 //Read command line arguments
@@ -1571,6 +2131,25 @@ if (args.Length > 0)
 }
 
 //dotnet run -- input.txt --mode fast --verbose
+
+//multi‑file compilation
+//dotnet run a.cs b.cs c.cs
+
+//Example of a simple file‑scoped app
+
+/* 
+using System;
+
+class Person
+{
+    public string Name { get; set; }
+    public void SayHello() => Console.WriteLine($"Hello, I'm {Name}");
+}
+
+var p = new Person { Name = "Ivan" };
+p.SayHello(); */
+
+
 
 
 
