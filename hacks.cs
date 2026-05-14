@@ -199,6 +199,7 @@ char[] chars = helloWorld.ToCharArray(); //Copies the characters to a Unicode ch
 var lowerCaseStr = helloWorld.ToLowerInvariant(); //Same as string.ToLower()
 var upperCaseStr = helloWorld.ToUpperInvariant(); //Same as string.ToUpper()
 int compareString = string.Compare("apple", "banana"); // (–1, 0, 1) negative 
+ReadOnlySpan<char> test = firstName2.AsSpan(); //read-only span representation
 
 // Split the line based on delimiters
 string[] parts = helloWorld.Split(',');
@@ -278,17 +279,6 @@ byte byteCast = (byte)MaxZoom;
 var checkedVar = checked(Pi + number);
 var def = default(int);
 var nullForgivingOperator = default(int)!; //suppresses null compiler warnings
-
-            //Parameters by reference
-
-// ref — must be initialized, can read AND write
-void WithRef(ref int x) => x += 10;
-
-// out — doesn't need to be initialized, MUST be written inside
-void WithOut(out int x) => x = 99;
-
-// in — must be initialized, READ ONLY (no modification allowed)
-void WithIn(in int x) => Console.WriteLine(x); // can't write to x
 
 
 
@@ -726,7 +716,7 @@ var comparer = set.Comparer;
 var nameSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 {
     "Ivan",
-    "ivan"
+    "ivan" // this entry will not be added "Ivan" == "ivan"
 };
 
 //Create HashSet based on a list
@@ -914,7 +904,7 @@ class NumberBox
  ********************************************************************/
 
 
-var dt = new DateTime(); //Min value date 1/1/0001 12:00:00 AM
+var newDateTime = new DateTime(); //Min value date 1/1/0001 12:00:00 AM
 var newDateTime = new DateTime(1989, 5, 10);
 var exactDateTime = new DateTime(2025, 4, 9, 14, 30, 0); //+ hour, min, sec
 DateTime now = DateTime.Now; //Local date + time
@@ -1026,7 +1016,259 @@ Console.Write($"{newDateTime:HH:mm:ss}"); // 14:30:25
 
 
 
+/********************************************************************
+ *                    Methodss & Properties                         *
+ ********************************************************************/
+//Every method has a signature: access modifier, return type, name, parameters. 
+//The body contains the logic.
 
+//To avoid error highlighting we put all methods inside a dummy class
+class Dummy{
+
+        //Properties
+
+private string _name;         // backing field (private)
+
+public string Name            // property (public)
+{
+    get => _name;
+    set => _name = value?.Trim(); //value is the implicit parameter representing the assigned value
+}
+
+// Read-write
+public string Name { get; set; }
+
+//Init-only - only callable during object initialisation
+public string Id { get; init; }
+
+//read-only
+public string Key { get; }
+
+// With default value (C# 6+)
+public int Count { get; set; } = 0;
+
+// Expression-bodied computed property
+public int Area => Width * Height;
+
+// Full body if logic needed
+public string Label
+{
+    get
+    {
+        if (Area > 1000) return "Large";
+        return "Small";
+    }
+}
+
+// Public read, private write
+public int Score { get; private set; }
+
+// Public read, protected write
+public string State { get; protected set; }
+
+// Internal set — within assembly only
+public Guid Id { get; internal set; }
+
+//Indexers — property-style access by key
+
+//Let a class be indexed like an array
+public T this[int index]
+{
+    get => _items[index];
+    set => _items[index] = value;
+}
+
+// Non-integer key
+public string this[string key]
+    => _dict.TryGetValue(key, out var v) ? v : null;
+
+
+            //Methods
+
+public int Add(int a, int b)   // signature
+{
+    return a + b;              // body
+}
+
+// Expression-bodied (C# 6+)
+public int Add(int a, int b) => a + b;
+
+            //Parameters
+
+//C# supports several parameter flavours.
+
+// Default value (Named argument at call site)
+void Greet(string name = "World") { }
+//Greet(name: "Alice");
+
+            //Parameters by reference
+
+//With ref — must be initialized, can read AND write, original is modified
+void ModifyReference(ref int y) => y *= 2;
+//int b = 5;
+//ModifyReference(ref b);
+
+
+// out — doesn't need to be initialized, MUST be written inside
+void WithOut(out int x) => x = 99;
+//call it like this => WithOut(out int x);
+
+
+// in — must be initialized, READ ONLY (no modification allowed)
+void WithIn(in int x) => Console.WriteLine(x); // can't write to x
+// int x = 15;
+// WithIn(in x);
+
+
+// params — variable-length
+// params is just syntactic sugar that lets callers pass a comma-separated list instead of array
+int Sum(params int[] nums) => nums.Sum();
+//Sum(0, 1, 0, 3, 12);
+
+            //Return types
+
+// Typed return
+public string GetName() => _name;
+
+// void — no return value
+public void Reset() => _count = 0;
+
+// Tuple return (C# 7+)
+public (int min, int max) Range()
+    => (Items.Min(), Items.Max());
+
+// Async Task (Non-blocking I/O operations)
+public async Task<string> FetchAsync()
+    => await _client.GetStringAsync(url);
+
+//Local functions
+public static void OuterMethod()
+{
+    //A local function is a method declared inside another method.
+    void InnerHelper()
+    {
+        Console.WriteLine("I'm inside OuterMethod");
+    }
+
+    InnerHelper();
+}
+
+            //Accessors
+
+//get accessor
+private List<string> _tags;
+
+public IReadOnlyList<string> Tags
+{
+    get
+    {
+        // Lazy initialisation
+        return _tags ??= new List<string>();
+    }
+}
+
+//set accessor
+private int _age;
+
+public int Age
+{
+    get => _age;
+    set
+    {
+        if (value < 0 || value > 150)
+            throw new ArgumentOutOfRangeException();
+        _age = value;
+        OnPropertyChanged();     // notify UI (INotifyPropertyChanged)
+    }
+}
+
+            //Method overloading
+
+public string Format(int n)     => n.ToString();
+public string Format(double d)  => d.ToString("F2");
+public string Format(DateTime dt) => dt.ToString("yyyy-MM-dd");
+
+
+            //Generic methods
+
+// Unconstrained
+public T[] Repeat<T>(T item, int count)
+    => Enumerable.Repeat(item, count).ToArray();
+
+// Constrained: T must implement IComparable
+public T Max<T>(T a, T b) where T : IComparable<T>
+    => a.CompareTo(b) >= 0 ? a : b;
+
+// Multiple constraints
+public T Create<T>() where T : class, new()
+    => new T();
+    
+
+} //ending of Dummy class
+
+
+//Extension methods (Must be in a static class)
+
+public static class StringExtensions
+{
+    //has to be static
+    public static bool IsNullOrEmpty(this string s)
+        => string.IsNullOrEmpty(s);
+}
+
+// Called as if it's a string method
+string name = null;
+bool empty = name.IsNullOrEmpty(); // true
+
+            //Operator overloading
+
+public readonly record struct Money(decimal Amount, string Currency)
+{
+    //Must be public static
+    public static Money operator +(Money a, Money b)
+    {
+        if (a.Currency != b.Currency) throw new InvalidOperationException();
+        return a with { Amount = a.Amount + b.Amount };
+    }
+}
+
+            //Access modifiers
+
+/*
++----------------------+--------------------------------+
+| Modifier             | Visible to                     |
++----------------------+--------------------------------+
+| public               | Everyone                       | 
+| private              | Containing class only          | 
+| protected            | Containing class + subclasses  | 
+| internal             | Same assembly                  | 
+| protected internal   | Same assembly OR subclasses    | 
+| private protected    | Same assembly AND subclasses   | 
++----------------------+--------------------------------+
+*/       
+
+                //Other modifiers
+
+/*
++----------------------+------------------------------------+
+| Modifier             | Effect                             |
++----------------------+------------------------------------+
+| static               | Belongs to type, not instance      | 
+| readonly             | Field set only in constructor      | 
+| const                | Compile-time constant              | 
+| async                | Enables await inside method        | 
+| partial              | Split across files                 | 
+| extern               | Implemented externally (P/Invoke)  | 
++----------------------+------------------------------------+
+*/ 
+
+
+
+
+
+
+
+ 
 /********************************************************************
  *                             Classes & Objects                    *
  ********************************************************************/
@@ -1036,6 +1278,15 @@ Console.Write($"{newDateTime:HH:mm:ss}"); // 14:30:25
 * File-Scoped Namespace Declaration (C# 10+)    namespace Name;   
 * You can even use nested namespaces:           namespace MyApp.Services.Payments;                    
 */
+
+//The most basic class declaration requires only the class keyword and a name.
+class Basic
+{
+}
+
+//using a Primary Constructor (C# 12+)
+//parentheses are not necessary
+public class MyCar(){}
 
 var person = new Person()
 {
@@ -1055,11 +1306,6 @@ void CallMethod(Person person) { };
 
 CallMethod(new Person() { FirstName = "Ivan", LastName = "Garzon" });
 
-//With ref — passes the REFERENCE, original is modified
-void ModifyReference(ref int y) => y = 10;
-int b = 5;
-ModifyReference(ref b);
-
 //using primary constructor (new in C# 12)
 public class Person(string firstName, string lastName, MyCar car)
 {
@@ -1067,14 +1313,6 @@ public class Person(string firstName, string lastName, MyCar car)
     public string LastName { get; set; } = lastName;
     public MyCar Car { get; set; } = car;
     public List<Pet> Pets { get; } = new(); //new in C# empty list
-
-    string? name;
-    
-    public string Name    // Property
-    {
-        get => name;
-        set => name = value;
-    }
 
     public required string FullName { get; set; } //Auto-Implemented Property with get/set accessors
 
@@ -1092,8 +1330,6 @@ public class Person(string firstName, string lastName, MyCar car)
     }
 }
 
-public class MyCar(){};
-
 
 //In Abstract classes there's a strong "is-a" relationship
 //Use an abstract class when derived classes are logically types of the base class.
@@ -1108,8 +1344,10 @@ public abstract class Pet(string firstName)
 
     public virtual void BeFriendly() => Console.WriteLine("Jump and be frantic");
 
-    //all derived classes MUST use the following method (not implemented here)
+    //all derived classes MUST use the following method (cannot implement body here, it's not allowed)
     public abstract string MakeNoise();
+
+    public abstract void DoWork() { }   // ❌ compile error
 
     //Gets the Type Name of the current instance. For example, Cat derived class will print Cat.
     public override string ToString() => GetType().Name;
@@ -1184,27 +1422,6 @@ return 1;
 //using Reflection lets you inspect a type's metadata to get information about that type
 Type t = typeof(Pet);
 MemberInfo[] members = t.GetMembers();
-
-// Local Functions
-public class LocalMethodExample
-{
-    public static void OuterMethod()
-    {
-        //A local function is a method declared inside another method.
-        void InnerHelper()
-        {
-            Console.WriteLine("I'm inside OuterMethod");
-        }
-
-        InnerHelper();
-    }
-}
-
-//Extension methods (Must be in a static class)
-public static class Extensions
-{
-    public static int Square(this int x) => x * x; //has to be static
-}
 
 
 
@@ -1703,8 +1920,15 @@ var recordClass = new Person("Grace", "Hopper");
 public record Product
 {
     public required string Name { get; init; }
-    public decimal Price { get; set; } //read/write
+    public decimal Price { get; set; } //read/write but it defeats the purpose of immutability
 }
+
+//instantiating of standard record 
+var prod = new Product
+{
+    Name = "name",
+    Price = 23.5
+};
 
 // You can add behavior to a record type by declaring members
 public record Point(int X, int Y)
@@ -1728,10 +1952,12 @@ public readonly record struct Temperature(double Celsius)
 // Record class
 var p1 = new Person("Ivan", "Garzon");
 var p2 = p1; // p1 and p2 point to the same object:
+var referenceEquality = ReferenceEquals(p1, p2); //True
 
 // Record struct — assignment copies the data
 var c1 = new Coordinate(47.6062, -122.3321);
 var c2 = c1;
+var valueEquality = c1 == c2; //true
 c2.Longitude = 0.0; // mutating c2 doesn't affect c1
 
 
@@ -1741,7 +1967,7 @@ Point point2 = new(5, 10);//object initializer syntax, can be returned from a me
 //this should print New point : Point { X = 5, Y = 10 }
 Console.WriteLine($" New point : {point1}");
 
-//Nondestructive mutation
+//Nondestructive mutation -> with creates a new object
 var point3 = point1 with { }; //not changing anything, so this is a shallow clone with all the same values
 var point4 = point1 with { X = 7 };
 
@@ -2047,18 +2273,45 @@ var enumInt = (int)FileMode.Create;
 /********************************************************************
  *                                   Structs                        *
  ********************************************************************/
-//structs are value types and are always copied without ref
+//structs are value types stored on the stack
+//Microsoft recommendation: Structs should be small, immutable, and contain only value-type fields.
+//has a default zero-value
+//Cannot inherit or be inherited 
 
 
-public struct Coords
+struct Struct
 {
-    public int x, y;
+    public int X;
+    public int Y;
+}
 
-    public Coords(int p1, int p2)
-    {
-        x = p1;
-        y = p2;
-    }
+//Instantiate a struct
+var structInstance = new Struct();
+Struct structInstance = new();
+var structInstance = new Struct { X = 3, Y = 5 };
+Struct structInstance = new() { X = 3, Y = 5 };
+
+public struct BasicStruct
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+    public BasicStruct(int x, int y) { X = x; Y = y; }
+    public double DistanceTo(BasicStruct other) =>
+        Math.Sqrt(Math.Pow(X - other.X, 2) + Math.Pow(Y - other.Y, 2));
+}
+
+
+// Value type — COPY behavior
+BasicStruct a = new(1, 2);
+BasicStruct b = a;       // b is a full copy
+b.X = 99;
+Console.WriteLine(a.X); // Still 1 — a is unaffected
+
+//immutable readonly struct (init-only properties)
+public readonly struct Temperature
+{
+    public double Celsius { get; }
+    public Temperature(double celsius) => Celsius = celsius;
 }
 
 
@@ -2072,6 +2325,11 @@ void Scale(ref Vector2 v, float factor)
 
 var position = new Vector2 { X = 3f, Y = 4f };
 Scale(ref position, 2f);// position  { X = 6, Y = 8 }
+
+//record struct
+public record struct RecordStruct(int X, int Y); // Immutable, value equality, with-expressions
+
+
 
 
 
