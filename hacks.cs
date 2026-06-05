@@ -94,8 +94,14 @@ byte byteNumber = 255;
 var myVar = 10;
 
 //Generating random numbers
+
+// Creates a new instance, Thread-unsafe & Seed collision
 Random random = new();
 int randomNumber = random.Next(100000, 999999); // 6-digit random ID
+
+// Introduced in .NET 6, this is a static, globally shared instance
+// Thread-safe, No instantiation, Better randomness ✅
+int randomNum = Random.Shared.Next(100000, 999999);
 
 //Math library
 Math.Max(5, 3);
@@ -184,7 +190,7 @@ string chainedCoalescing = nullString ?? returnEmptyStr ?? emptyStr ?? "Unknown"
 var trimmed = firstName2.Trim();
 var replaced = helloWorld.Replace("Hello", "Hey");
 var contains = helloWorld.Contains("Hello"); //true if it finds the substring
-var subStr = helloWorld.Substring(0, 5); // Substring(startIndex, length) => "Hello"
+var subStr = helloWorld.Substring(0, 5); // Substring(startIndex, length) => "Hello"  => helloWorld[..5]
 var length = helloWorld.Length;
 var startsWith = helloWorld.StartsWith("Hell");
 var endsWith = helloWorld.EndsWith("World");
@@ -199,7 +205,6 @@ char[] chars = helloWorld.ToCharArray(); //Copies the characters to a Unicode ch
 var lowerCaseStr = helloWorld.ToLowerInvariant(); //Same as string.ToLower()
 var upperCaseStr = helloWorld.ToUpperInvariant(); //Same as string.ToUpper()
 int compareString = string.Compare("apple", "banana"); // (–1, 0, 1) negative 
-ReadOnlySpan<char> test = firstName2.AsSpan(); //read-only span representation
 
 // Split the line based on delimiters
 string[] parts = helloWorld.Split(',');
@@ -241,11 +246,46 @@ builder.AppendLine("The following arguments are passed:");
 Console.WriteLine(builder.ToString());
 
 //Range and Index
-s = "Hello World"; 
+var s = "Hello World"; 
 s[6..]; // "World" 
 s[..5]; // "Hello" 
 s[^5..]; // "World"
 
+            // ReadOnlySpan<T> 
+
+// stack-allocated view over a contiguous block of memory
+// avoid it in async methods 
+ReadOnlySpan<char> emptySpan = ReadOnlySpan<char>.Empty;
+
+string input = "Hello, World!";
+
+ReadOnlySpan<char> test = firstName2.AsSpan(); //read-only span representation
+
+// ❌ String.Substring — allocates a new string on the heap
+string sub = input.Substring(7, 5);
+
+// ✅ Span slice
+ReadOnlySpan<char> sub = input.AsSpan(7, 5);
+Console.WriteLine(sub.ToString());
+
+ReadOnlySpan<char> span = input.AsSpan();
+var sub = span[7..12];
+
+string sentence = "the quick brown fox";
+
+// ❌ Creating substrings per word in a loop
+foreach (var word in sentence.Split(' '))
+    Process(word); // each word is a new heap string
+
+// ✅ Manually walk with spans — no allocations
+ReadOnlySpan<char> span = sentence.AsSpan();
+while (span.Length > 0)
+{
+    int space = span.IndexOf(' ');
+    ReadOnlySpan<char> word = space < 0 ? span : span[..space];
+    Process(word);
+    span = space < 0 ? ReadOnlySpan<char>.Empty : span[(space + 1)..];
+}
 
 
 
@@ -277,6 +317,7 @@ float myFloat = (float)myInt;
 int piCast = (int)Pi;
 byte byteCast = (byte)MaxZoom;
 var checkedVar = checked(Pi + number);
+checked { int x = int.MaxValue + 1; }
 var def = default(int);
 var nullForgivingOperator = default(int)!; //suppresses null compiler warnings
 
@@ -409,7 +450,8 @@ foreach (var letter in letters)
 
 //Search capabilities
 var index = names.IndexOf("Felipe"); //If the item isn't in the list, IndexOf returns -1.
-bool has = list.Contains("Alice");
+int index = names.FindIndex(n => n.Equals("Charlie", StringComparison.OrdinalIgnoreCase));
+bool has = names.Contains("Alice");
 bool any = list.Exists(n => n.Length > 4);
 string found = list.Find(n => n[0] == 'B'); 
 
@@ -821,20 +863,6 @@ static async IAsyncEnumerable<int> ReadSequenceAsync()
 await foreach (var yieldedNumber in ReadSequenceAsync())
    { Console.WriteLine(yieldedNumber); }
 
-
-//More asynchronous iterators
-async IAsyncEnumerable<int> GenerateNumbersAsync(int count)
-{
-    for (int i = 0; i < count; i++)
-        yield return await ProduceAsync(i);
-}
-
-async Task<int> ProduceAsync(int seed)
-{
-    await Task.Delay(1000);
-    return seed * 2;
-}
-
 //Handle reading input from standard input (stdin) 
 while (Console.ReadLine() is string line && line.Length > 0)
 {
@@ -900,9 +928,9 @@ class NumberBox
 
 
 /********************************************************************
- *                                Dates                          *
+ *                                Datess                          *
  ********************************************************************/
-
+// DateTime are struct value type (not reference type)
 
 var newDateTime = new DateTime(); //Min value date 1/1/0001 12:00:00 AM
 var newDateTime = new DateTime(1989, 5, 10);
@@ -930,6 +958,7 @@ DateTimeKind kind = newDateTime.Kind; //Local / Utc / Unspecified
 //Types
 var dateTime = DateTime(); //Date + time, no timezone
 var dateOnly = DateOnly(); //Date only
+var dateOnly2 = DateOnly.FromDateTime(DateTime.Now);
 var timeOnly = TimeOnly(); //time only
 var dateTimeOffset = DateTimeOffset(); //DateTime + UTC offset
 var timeSpan = TimeSpan(); // Duration / difference
@@ -1025,17 +1054,17 @@ Console.Write($"{newDateTime:HH:mm:ss}"); // 14:30:25
 //To avoid error highlighting we put all methods inside a dummy class
 class Dummy{
 
-        //Properties
+        //Properties (private by default)
 
-private string _name;         // backing field (private)
+string _name;         // backing field (private by default)
 
-public string Name            // property (public)
+string Name            // Property (private by default)
 {
     get => _name;
     set => _name = value?.Trim(); //value is the implicit parameter representing the assigned value
 }
 
-// Read-write
+// Read-write auto-property (generate a hidden backing field)
 public string Name { get; set; }
 
 //Init-only - only callable during object initialisation
@@ -1092,6 +1121,18 @@ public int Add(int a, int b)   // signature
 
 // Expression-bodied (C# 6+)
 public int Add(int a, int b) => a + b;
+
+// main method => entry point of the application
+// in ASP.NET Core Main(): bootstrapping, WebHost, Kestrel/web server
+public static async Task Main(string[] args)
+{
+    // returns a success code (0) from Main method
+    return 0;
+
+    // returns a exception code (1) from Main method
+    return 1;
+}
+
 
             //Parameters
 
@@ -1182,7 +1223,7 @@ public int Age
     }
 }
 
-            //Method overloading
+            //Method overloading (compile-time Polymorphism)
 
 public string Format(int n)     => n.ToString();
 public string Format(double d)  => d.ToString("F2");
@@ -1202,7 +1243,34 @@ public T Max<T>(T a, T b) where T : IComparable<T>
 // Multiple constraints
 public T Create<T>() where T : class, new()
     => new T();
-    
+
+            // Operator overloading
+
+// Operator overloading must be public static
+
+// a + b => Dummy.operator+(a, b)
+public static Dummy operator +(Dummy a, Dummy b)
+    => new(a.X + b.X, a.Y + b.Y);
+
+// unary operator -(a)
+public static Dummy operator -(Dummy v)
+    => new(-v.X, -v.Y);
+
+//  a * 5
+public static Dummy operator *(Dummy v, double num)
+    => new(v.X * num, v.Y * num);
+
+// 5 * a (will call the other overloaded operator)
+public static Dummy operator *(double scalar, Dummy v)
+    => v * scalar;
+
+// a / 2
+public static Dummy operator /(Dummy v, double scalar)
+{
+    if (scalar == 0) throw new DivideByZeroException();
+    return new(v.X / scalar, v.Y / scalar);
+}
+
 
 } //ending of Dummy class
 
@@ -1222,6 +1290,7 @@ bool empty = name.IsNullOrEmpty(); // true
 
             //Operator overloading
 
+// Operator overloading must be public static
 public readonly record struct Money(decimal Amount, string Currency)
 {
     //Must be public static
@@ -1232,7 +1301,7 @@ public readonly record struct Money(decimal Amount, string Currency)
     }
 }
 
-            //Access modifiers
+            //Member Access modifiers
 
 /*
 +----------------------+--------------------------------+
@@ -1241,11 +1310,24 @@ public readonly record struct Money(decimal Amount, string Currency)
 | public               | Everyone                       | 
 | private              | Containing class only          | 
 | protected            | Containing class + subclasses  | 
-| internal             | Same assembly                  | 
+| internal             | Same assembly/project          | 
 | protected internal   | Same assembly OR subclasses    | 
 | private protected    | Same assembly AND subclasses   | 
 +----------------------+--------------------------------+
 */       
+
+//Examples
+public class BankAccount
+{
+    private decimal _balance;              // only this class
+    protected string OwnerId { get; set; }  // this class + subclasses
+    internal void SyncWithCore() { }       // other classes in same .dll
+    public decimal GetBalance() => _balance; // anyone
+
+    protected internal void AuditLog() { }  // same .dll OR any subclass
+    private protected void Reset() { }      // subclasses in same .dll only
+}
+
 
                 //Other modifiers
 
@@ -1270,7 +1352,7 @@ public readonly record struct Money(decimal Amount, string Currency)
 
  
 /********************************************************************
- *                             Classes & Objects                    *
+ *                             Classess & Objects                    *
  ********************************************************************/
 
 /*
@@ -1280,41 +1362,53 @@ public readonly record struct Money(decimal Amount, string Currency)
 */
 
 //The most basic class declaration requires only the class keyword and a name.
-class Basic
+class Basic{}
+
+            // Access Modifiers
+
+// Only two modifiers are valid on a top-level class: public, internal
+// the default access modifier for a top-level class is internal:
+class A {} // => internal class A {}
+
+//parentheses are not necessary
+public class MyCar{}
+
+// object initializer : Create an object and assign its properties/fields immediately
+public class Initializer
 {
+    public string Name { get; set; } //  Works with Fields too
+    public int Age { get; set; }
 }
 
-//using a Primary Constructor (C# 12+)
-//parentheses are not necessary
-public class MyCar(){}
-
-var person = new Person()
+var initializer = new Initializer
 {
-    FirstName = "Ivan",
-    LastName = "Garzon",
-    Car = new MyCar()
+    Name = "Bob",
+    Age = 25
 };
 
-person.Pets.Add(new Cat("Johny"));
-person.Pets.Add(new Cat("Liam"));
+//Nested Class
+class Outer
+{
+    // default accessor: private
+    class Inner  // =>  private class Inner {}
+    {
+    }
+}
 
-MyCar NewCar = new();
-NewCar.Brand("Audi");
-
-//Inline param obj instantiation
-void CallMethod(Person person) { };
-
-CallMethod(new Person() { FirstName = "Ivan", LastName = "Garzon" });
+// Constructors
+public class House {
+    public string Address { get; }
+    public House(string address) => Address = address;
+    public House() : this("Unknown") { }  // chaining to the other ctor
+}
 
 //using primary constructor (new in C# 12)
 public class Person(string firstName, string lastName, MyCar car)
-{
+{   //encapsulation happens here
     public string First { get;  set; } = firstName;
     public string LastName { get; set; } = lastName;
     public MyCar Car { get; set; } = car;
-    public List<Pet> Pets { get; } = new(); //new in C# empty list
-
-    public required string FullName { get; set; } //Auto-Implemented Property with get/set accessors
+    public List<MyCar> MyCars { get; } = new(); //new in C# empty list
 
     //dynamically defining get accessor
     public decimal Amount
@@ -1330,10 +1424,37 @@ public class Person(string firstName, string lastName, MyCar car)
     }
 }
 
+// sealed classes (cannot have a derived class)
+public sealed class FinalClass{}
+
+// ❌ Compile-time error
+public class MyFinalClass : FinalClass{}
+
+// initialize instance of Person
+var person = new Person("Ivan", "Garzon", new MyCar());
+
+// Add items to the class's list property
+person.MyCars.Add(new MyCar());
+person.MyCars.Add(new MyCar());
+
+//Inline param obj instantiation
+void CallMethod(Person person) { };
+CallMethod(new Person("John", "Doe", new MyCar()));
+
+
+                // Inheritance & Polymorphism
 
 //In Abstract classes there's a strong "is-a" relationship
 //Use an abstract class when derived classes are logically types of the base class.
 //Cannot create instance of an abstract Pet
+
+// Inheritance does not require abstract, you can use normal (concrete) classes
+public class A {}
+
+public class B : A {} // private members from A not accessible
+
+public class C : B {}
+
 public abstract class Pet(string firstName)
 {
 
@@ -1342,37 +1463,175 @@ public abstract class Pet(string firstName)
     //Implemented
     public void Breathe() => Console.WriteLine("Breathing...");
 
+    // optional to override in a derived class
     public virtual void BeFriendly() => Console.WriteLine("Jump and be frantic");
 
     //all derived classes MUST use the following method (cannot implement body here, it's not allowed)
     public abstract string MakeNoise();
 
-    public abstract void DoWork() { }   // ❌ compile error
+    public abstract void DoWork() { Console.WriteLine("doing some work"); }   // ❌ compile error
 
     //Gets the Type Name of the current instance. For example, Cat derived class will print Cat.
     public override string ToString() => GetType().Name;
 }
 
-public class Cat(string firstName) : Pet(firstName)
+public class Cat : Pet
 {
-    //here we override the base class method
+    //call a base class constructor from the derived class
+    //The base class constructor always runs before the body of the derived class constructor
+    public Cat(string firstName) : base(firstName)
+    {}
+
+    //I MUST override the base class method
     public override string MakeNoise() => "Meow";
 
     public int Age { get; set; }
 }
 
-public class Dog(string firstName) : Pet(firstName)
+public class Dog(string firstName) : Pet(firstName) // can call the base constructor from here as well
 {
-    //here we override the base class method
+    //I MUST override the base class method
     public override string MakeNoise() => "Bark";
 
     public int Age { get; set; }
+
+    // I can override any virtual method
     public override void BeFriendly()
     {
         Console.WriteLine("I am a dog");
-        base.BeFriendly();
+        base.BeFriendly(); // calling the base class
     }
 }
+
+// Use the BASE type reference when you want polymorphism
+Pet myCat = new Cat("Johny");
+Pet myDog = new Dog("Dugg");
+
+// Use the DERIVED type reference when you need derived-specific members
+Dog dog = new Dog("Johny");
+
+//Determines whether the specified object is equal to the current object.
+var objectsEqual = myCat.Equals(myDog);
+
+// Collection of derived class objects
+List<Pet> animals = new()
+{
+    new Dog("Johny"),
+    new Cat("Dugg")
+};
+
+            // Interfaces
+
+// An interface is a contract defining members a class or struct must implement
+// An interface cannot have: constructors, instance fields
+
+public interface IFoo
+{
+    void DoWork();
+}
+
+public class Bar : IFoo
+{
+    public void DoWork() => Console.WriteLine("Bar is working");
+
+}
+
+public class Baz : IFoo
+{
+    public void DoWork() => Console.WriteLine("Baz here");
+}
+
+//Use the implementation
+IFoo foo = new Bar();
+foo.DoWork();
+
+// Collection of objects
+List<IFoo> interfaces = new()
+{
+    new Bar(),
+    new Baz()
+};
+
+// Explicit interface implementation
+interface IFoo { void Run(); }
+interface IBar { void Run(); }
+
+class MyClass : IFoo, IBar {
+    public void IFoo.Run() => Console.WriteLine("IFoo");
+    public void IBar.Run() => Console.WriteLine("IBar");
+}
+
+// Interface with Properties
+// implementing members must usually be public
+interface IPerson
+{
+    string Name { get; set; }
+    int Age { get; set; }
+    double Area { get; } // read-only properties
+}
+
+// Interface with Default Method Implementation
+interface ILogger
+{
+    void LogError(string error) =>  Console.WriteLine($"ERROR: {error}");
+}
+
+class ConsoleLogger : ILogger
+{}  // No need to implement LogError
+
+
+//Overriding Default Interface Methods
+// A class can replace the default implementation.
+class ConsoleLogger : ILogger
+{  
+    public void LogError(string error) => Console.WriteLine($"Override ERROR: {error}");
+}
+
+// Common .NET interfaces to know
+IEnumerable<T>; IComparable<T>; IEquatable<T>; IDisposable; ICollection<T>; IList<T>; INotifyPropertyChanged;
+
+// ICollection<T> => add/remove operations
+ICollection<string> nameCollection = new List<string>();
+nameCollection.Add("Alice");
+nameCollection.Add("Bob");
+
+// IList<T> => ordered collection with index access
+IList<string> nameList = new List<string>();
+nameList.Add("Alice");
+nameList.Add("Bob");
+Console.WriteLine(nameList[0]);
+nameList[1] = "Charlie";
+
+// IComparable => Used for sorting.
+public class Computer : IComparable<Computer>
+{
+    public string Brand { get; set; }
+
+    public int CompareTo(Computer? other)
+    {
+        return Brand.CompareTo(other?.Brand);
+    }
+}
+
+// var computers = new List<Computer> {...};
+// computers.Sort();
+
+// IEquatable<T> => determine object equality
+// Often paired with: GetHashCode()
+public class Product : IEquatable<Product>
+{
+    public int Id { get; set; }
+
+    public bool Equals(Product? other)
+    {
+        return other is not null && Id == other.Id;
+    }
+}
+
+// p1.Equals(p2);
+
+
+            // Hiding base class members
 
 public class BaseClass
 {
@@ -1380,13 +1639,6 @@ public class BaseClass
     public int WorkField;
 }
 
-var myCat = new Cat("Johny");
-var myDog = new Dog("Dugg");
-
-//Determines whether the specified object is equal to the current object.
-var objectsEqual = myCat.Equals(myDog);
-
-//Hiding base class members with new members
 public class DerivedClass : BaseClass
 {
     public new void DoWork() { WorkField++; }
@@ -1394,7 +1646,7 @@ public class DerivedClass : BaseClass
 }
 
 //A derived class can stop virtual inheritance by declaring an override as sealed
-public class C : B
+public class SealedMemberClass : BaseClass
 {
     public sealed override void DoWork() { }
 }
@@ -1412,16 +1664,22 @@ var onSale = apple with { Price = 0.79 };
 //Temporarily Grouping Data with anonymous type
 var grouped = list.GroupBy(x => new { x.Category, x.Type });
 
-// returns a success code (0) from Main method
-return 0;
-
-// returns a exception code (1) from Main method
-return 1;
-
-
 //using Reflection lets you inspect a type's metadata to get information about that type
-Type t = typeof(Pet);
-MemberInfo[] members = t.GetMembers();
+Type type = (new Pet()).GetType();
+Type type = typeof(Pet);
+Console.WriteLine(type.Name); // Pet
+PropertyInfo[] properties = type.GetProperties(); // Gets Properties
+MemberInfo[] members = type.GetMembers(); // Get Methods
+
+//Invoke Method Dynamically
+MethodInfo? method = type.GetMethod("SayHello");
+method?.Invoke(person, null);
+
+// Access Properties Dynamically
+Person person = new();
+PropertyInfo? prop = type.GetProperty("Name");
+prop?.SetValue(person, "Alice");
+Console.WriteLine(prop?.GetValue(person)); // Alice
 
 
 
@@ -1431,11 +1689,14 @@ MemberInfo[] members = t.GetMembers();
 /********************************************************************
  *                                Generics                          *
  ********************************************************************/
+// used for type-safe, reusable code without boxing or casting.
+// resolved at compile time
 
+            // Generic class
 
-
-// Generic List
-public class GenericList<T>
+// declare <T> on the class
+// When <T> is declared on the class, every method inside that class automatically has access to T
+public class GenericList<T> // <T> declared HERE — applies to the whole class
 {
     public void Add(T value) { }
 }
@@ -1443,39 +1704,30 @@ public class GenericList<T>
 var genericNumbers = new GenericList<int>();
 var books = new GenericList<Book>();
 
+// Example for Generic Stack
+public class Stack<T> {
+    private List<T> _items = new();
+    public void Push(T item) => _items.Add(item);
+    public T Pop() { var last = _items[^1]; _items.RemoveAt(_items.Count-1); return last; }
+}
+
 // Generic Dictionary
 public class GenericDictionary<TKey, TValue>
 {
     public void Add(TKey key, TValue value){}
 }
 
-// Generic Method signature
-public class MyClass
-{
-    public T Max<T>(T a, T b) where T : IComparable
-    {
-        return a.CompareTo(b) > 0 ? a : b;
-    }
-}
+            // Generic Method
 
-//Applying a constraint to be of a specific interface (i.e. IComparable, but can be any other interface)
-public class MyClass<T> where T : IComparable
+// Declare <T> on the method itself      
+// only that specific method needs a type parameter
+public class Utils
 {
-    public T Max<T>(T a, T b) 
-    {
-        return a.CompareTo(b) > 0 ? a : b;
-    }
+    public void Print<T>(T item) => Console.WriteLine(item);  // T lives on the method only
 }
 
 //Defaul value of generic T
 var myDefault = default(T);
-
-//Other constraints
-public class MyClass<T> where T : Product { } // T is a Product or any of it's children
-public class MyClass<T> where T : struct {} // T is a value type
-public class MyClass<T> where T : class {} // T is a reference type
-public class MyClass<T> where T : new() {} // T is an object with a default ctor
-public class MyClass<T> where T  : IComparable, new() {} // using 2 constraints: T is a comparable object with a default ctor
 
 //Boxing
 int boxedNumber = 42;
@@ -1485,6 +1737,74 @@ object box = boxedNumber;  // Boxing happens here
 object boxedInt = 42;
 int unboxedNumber = (int)boxedInt;  // Unboxing
 int unboxedGenericNumber = (T)boxedInt; //Using generics
+
+//Multiple type parameters
+public class Triple<T1, T2, T3>
+{
+    public T1 First { get; set; }
+    public T2 Second { get; set; }
+    public T3 Third { get; set; }
+}
+
+var tripleData = new Triple<string, int, bool>
+{
+    First = "Alice",
+    Second = 30,
+    Third = true
+};
+
+            // Generic constraints (where)
+// where T : class, where T : struct, where T : new(), where T : BaseClass, where T : IInterface, where T : notnull
+
+public class Constraint<T> where T : constraint
+{}
+
+// Example: T must be a reference type
+public class Repository<T> where T : class
+{
+    public T? Find() => null;
+}
+
+Repository<string> repo1 = new();
+Repository<int> repo = new(); // ❌ int is a value type
+
+public class MyClass
+{
+    public T Max<T>(T a, T b) where T : IComparable<T>
+    {
+        return a.CompareTo(b) > 0 ? a : b;
+    }
+}
+
+//Applying a constraint to be of a specific interface (i.e. IComparable, but can be any other interface)
+public class MyClass<T> where T : IComparable
+{
+    public T Max(T a, T b) 
+    {
+        return a.CompareTo(b) > 0 ? a : b;
+    }
+}
+
+//Other constraints
+public class MyClass<T> where T : Product { } // T is a Product or any of it's children
+public class MyClass<T> where T : struct {} // T is a value type
+public class MyClass<T> where T : class {} // T is a reference type
+public class MyClass<T> where T : notnull {} // T cannot be nullable
+public class MyClass<T> where T : new() {} // T is an object with a default ctor
+public class MyClass<T> where T : IComparable, new() {} // using 2 constraints: T is a comparable object with a default ctor
+
+// Constraint Ordering Rules
+// where T : BaseClass, IInterface, new()
+
+public class Example<T1, T2> 
+    where T1 : class 
+    where T2 : struct
+{
+    public T1 ReferenceValue { get; set; }
+    public T2 ValueValue { get; set; }
+}
+
+var ex = new Example<string, int>();
 
 
 
@@ -1505,6 +1825,16 @@ Action<T>;
 //Takes T, returns bool
 Predicate<T>;
 
+// Example list of Delegates and closure
+var actions = new List<Action>();
+
+for (int i = 0; i < 3; i++)
+{
+    int copy = i;
+    actions.Add(() => Console.WriteLine(copy));
+}
+
+actions.ForEach(a => a()); // prints 0, 1, 2
 
 //Example of a method that takes a delegate function
 static IEnumerable<TResult> Transform<T, TResult>(
@@ -1530,17 +1860,24 @@ var result = Transform(delegateList, delegate(string s) { return s.Length; });
 //3. Lambda (most common in modern C#)
 var result = Transform(names, s => s.Length);
 
+            // Event Handlers
+
 //Define a delegate method for the Subscribers (not needed anymore)
 public delegate void VideoEncodedEventHandler(object source, VideoEventArgs args);
+//Another example of delegate method raised when a class property is changed
+public delegate void PropertyChangedEventHandler(object? sender, PropertyChangedEventArgs e);
 
 //Define an event based on the delegate (not needed anymore)
-public event VideoEncodedEventHandler VideoEncoded;
+public event VideoEncodedEventHandler? VideoEncoded;
 
 //.Net already has a defined a generic event handler delegate, so the 2 lines above are no longer necessary
 public event EventHandler<VideoEventArgs> VideoEncoded;
 
-//Raise the event
-protected virtual void OnVideoEncoded(){}
+//Method that will (invoke) Raise the event
+protected virtual void OnVideoEncoded()
+{ 
+    VideoEncoded?.Invoke(this, new VideoEncodedEventArgs(EventArgs));
+}
 
 //Subscribe to the event
 publisher.VideoEncoded += subscriber.OnVideoEncoded;
@@ -1549,13 +1886,42 @@ publisher.VideoEncoded += subscriber.OnVideoEncoded;
                                                     /*  Automated Tests */
 
 
-                                                    /* Task based asynchronous */
+/********************************************************************
+ *                 Asynchronous programming                         *
+ ********************************************************************/
+
 
 public static async Task<int> GetPageLengthAsync(string endpoint)
 {
     byte[] content = await client.GetByteArrayAsync(uri);
     return content.Length;
 }
+
+//asynchronous iterators
+async IAsyncEnumerable<int> GenerateNumbersAsync(int count)
+{
+    for (int i = 0; i < count; i++)
+        yield return await ProduceAsync(i);
+}
+
+async Task<int> ProduceAsync(int seed)
+{
+    await Task.Delay(1000);
+    return seed * 2;
+}
+
+// run multiple tasks concurrently and wait until all of them finish
+// Concurrent ≠ Parallel
+await Task.WhenAll(Task1Async(), Task2Async(), Task3Async());
+
+// Example
+Task task1 = DownloadAsync("File A", 2000);
+Task task2 = DownloadAsync("File B", 3000);
+Task task3 = DownloadAsync("File C", 1000);
+
+Console.WriteLine("Waiting for all downloads...");
+
+await Task.WhenAll(task1, task2, task3);
 
 
 
@@ -1664,13 +2030,22 @@ int min = numbers.Min();  // 1
 int max = numbers.Max();  // 10
 
 //Aggregate (accumulator function) to multiply all numbers using a seed = 1
-int product = numbers.Aggregate(
-    1, 
-    (accumulated, x) => accumulated * x
-); 
+int product = numbers.Aggregate(1, (accumulated, x) => accumulated * x); 
+
+// word‑frequency count
+var words = new[] { "apple", "banana", "apple", "orange", "banana", "apple" };
+var duplicates = words.Aggregate(
+    new Dictionary<string, int>(),
+    (acc, word) =>
+    {
+        acc[word] = acc.TryGetValue(word, out var count) ? count + 1 : 1;
+        return acc;
+    });
 
 // First or default value
-var firstOrDefault = empty.FirstOrDefault(); // 0 (for int)
+var firstOrDefault = numbers.FirstOrDefault(); // 0 (for int)
+var greaterThanTen = numbers.FirstOrDefault(x => x > 10);
+var greaterThanTen = numbers.First(x => x > 10);
 
 //Last element
 numbers.Last();  // 10
@@ -1905,16 +2280,23 @@ var (x, y) = new Point
 
 
 /********************************************************************
- *                  Records types (class or struct)                 *
+ *                  Recordss types (class or struct)                 *
  ********************************************************************/
 
 
 
 //Use a record for immutable data models (e.g., DTOs), pattern matching and deconstruction.
 //A record is a reference type, with value-based equality semantics by default
-public record Person(string FirstName, string LastName); //Immutable positional parameters
+public record PersonRecord(string FirstName, string LastName); //Immutable positional parameters
+var recordClass = new PersonRecord("Grace", "Hopper");
 
-var recordClass = new Person("Grace", "Hopper");
+//primary constructor parameters (init-only properties)
+public record PersonPrimaryCtor(string FirstName, string LastName)
+{
+    //init Makes the property settable only during object initialization
+    //required Ensures that this property must be set during object creation
+    public required string[] PhoneNumbers { get; init; }
+}
 
 //Standard property syntax
 public record Product
@@ -1950,7 +2332,7 @@ public readonly record struct Temperature(double Celsius)
 //record class vs. record struct
 
 // Record class
-var p1 = new Person("Ivan", "Garzon");
+var p1 = new PersonRecord("Ivan", "Garzon");
 var p2 = p1; // p1 and p2 point to the same object:
 var referenceEquality = ReferenceEquals(p1, p2); //True
 
@@ -1975,7 +2357,7 @@ var point4 = point1 with { X = 7 };
 Console.WriteLine(point1 == point2); // output: True if type name and properties are equal
 
 //Positional records generate a Deconstruct
-var (first, last) = person;
+var (first, last) = recordClass;
 Console.WriteLine($"{first} {last}");
 
 //switch objects at run time, to see if it's the specified type 
@@ -1988,15 +2370,6 @@ currentBalance += transaction switch
     Withdrawal w => -w.Amount,
     _ => 0.0,
 };
-
-
-//primary constructor parameters (init-only properties)
-public record PersonPrimaryCtor(string FirstName, string LastName)
-{
-    //init Makes the property settable only during object initialization
-    //required Ensures that this property must be set during object creation
-    public required string[] PhoneNumbers { get; init; }
-}
 
 //Record inheritance
 public record ThreeDimensionPoint(int X, int Y, int Z) : Point(X, Y);
@@ -2154,6 +2527,28 @@ decimal propPattern = dog switch
     Dog { Age: 3 } => 2.0m - 1.0m,
     Dog => 4.0m,
     null => throw new ArgumentNullException(nameof(dog))
+};
+
+// example with value range and conditions on multiple props
+// record Order(int Id, decimal Total, bool IsPriority)
+var propertyPatter = order switch
+{
+    null => throw new ArgumentNullException(nameof(order)),
+    { Total: > 100, IsPriority: true }  => "High priority",
+    { Total: > 100, IsPriority: false } => "Large order",
+    { Total: < 100, IsPriority: true }  => "Priority",
+    _ => "Standard"
+};
+
+
+// positional pattern matching for tuples/records : Records generate a Deconstruct() method automatically
+// Order matters  
+var positionalPattern = order switch
+{
+    (_, > 100, true) => "High priority",
+    (_, > 100, false) => "Large order",
+    (_, < 100, true) => "Priority",
+    _ => "Standard"
 };
 
 // when clause of a switch arm. You use the when clause to test conditions other than equality on a property (ranges)
