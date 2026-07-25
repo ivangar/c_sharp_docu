@@ -455,6 +455,15 @@ bool has = names.Contains("Alice");
 bool any = list.Exists(n => n.Length > 4);
 string found = list.Find(n => n[0] == 'B'); 
 
+// Comparing 2 lists
+var list1 = new List<int> { 1, 2, 3 };
+var list2 = new List<int> { 1, 2, 3 };
+
+if (list1.SequenceEqual(list2))
+{
+    Console.WriteLine("Lists are equal");
+}
+
 // .. spread element to expand a collection (C# 12+)
 List<string> moreNames = [.. names, "Roger", "Xavier"];
 
@@ -1814,6 +1823,7 @@ var ex = new Example<string, int>();
  *                     Events & Delegates                           *
  ********************************************************************/
 
+// A delegate is a type that can hold a reference to a method.
 
 
 //C#'s built-in delegate type
@@ -1824,6 +1834,35 @@ Action<T>;
 
 //Takes T, returns bool
 Predicate<T>;
+
+// example
+
+delegate int MathOperation(int a, int b);
+
+int Add(int x, int y)
+{
+    return x + y;
+}
+
+MathOperation operation = Add;
+
+int result = operation(5, 3);   // Calls Add(5, 3)
+Console.WriteLine(result);      // 8
+
+// Delegates can point to different methods
+
+delegate int MathOperation(int a, int b);
+
+int Add(int a, int b) => a + b;
+int Multiply(int a, int b) => a * b;
+
+MathOperation operation;
+
+operation = Add;
+Console.WriteLine(operation(4, 2));      // 6
+
+operation = Multiply;
+Console.WriteLine(operation(4, 2));      // 8
 
 // Example list of Delegates and closure
 var actions = new List<Action>();
@@ -2631,7 +2670,32 @@ finally
     file?.Close();
 }
 
+// Determines whether the specified file exists
+var fileExists = File.Exists("FilePath//");
 
+// Determines whether the path referes to an existing directory
+var dirExists = Directory.Exists("FilePath//");
+
+// Returns the file name + extension from the path
+var fileName = Path.GetFileName("FilePath");
+
+// Gets the directory name
+var folderName = Path.GetDirectoryName("FilePath");
+
+// Combines 2 strings into a Path string
+string newPath = Path.Combine("FilePath//", "hello.txt");
+
+// Combines 3 strings into a Path string
+string newPath = Path.Combine("FilePath//", "Folder", "hello.txt");
+
+// Returns the names of subdirectories
+string[] folders = Directory.GetDirectories("FilePath//");
+
+// Creates a new directory
+Directory.CreateDirectory("FilePath//");
+
+// Moves file from source to a new destination. Optional overwrite if file exists
+File.Move("sourcePath", "destinationPath", overwrite: true);
 
 
 
@@ -2662,6 +2726,11 @@ Console.WriteLine($" Enum value {TransactionType.Deposit}");
 //cast an enum to get the int value
 var enumInt = (int)FileMode.Create;
 
+// Method that validates a string against the enum
+bool IsValidMode(string input)
+{
+    return Enum.TryParse<FileMode>(input, ignoreCase: true, out _);
+}
 
 
 
@@ -2737,7 +2806,7 @@ public record struct RecordStruct(int X, int Y); // Immutable, value equality, w
 using HttpClient client = new();
 
 //sends an HTTP GET request to the specified URI, return response as a String
-var json = await client.GetStringAsync("https://api.github.com/orgs/dotnet/repos");
+var json = await client.GetStringAsync("https://jsonplaceholder.typicode.com/posts/1");
 
 //deserialize a JSON response into a C# objects
 var repositories = await client.GetFromJsonAsync<List<object>>("https://api.github.com/orgs/dotnet/repos");
