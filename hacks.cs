@@ -23,6 +23,14 @@ string firstName = "John";
 Console.WriteLine("{0} {1}", number, firstName);
 Console.WriteLine($"String interpolation {number} {firstName}"); //string interpolation for concat
 Console.Error.WriteLine("Error Message"); //Log errors in console
+Console.WriteLine("c:\\source\\repos");  // Escaping the back slash character
+
+// Verbatim string literal
+Console.WriteLine(@"    c:\source\repos    
+        (this is where your code goes)");   // Verbatim string literal
+
+// Combine verbatim literals and string interpolation        
+Console.WriteLine($@"C:\Output\{projectName}\Data");
 
 //String Interpolation + Concatenation
 Console.WriteLine(
@@ -63,6 +71,7 @@ Console.WriteLine($"{value:D5}"); // 42 → 00042
 // 0 → required digit
 // # → optional digit
 Console.WriteLine($"{value:0.00}"); // 1234.5 → 1234.50
+Console.WriteLine($"{value:0.##}"); //0.35294 → 0.35
 Console.WriteLine($"{value:#,##0.00}"); //1234.5 → 1,234.50
 
 //Aligning Output
@@ -339,6 +348,7 @@ int[] numArray3 = new int[3]; //Arrays in C# are fixed-size
 Console.WriteLine($"{string.Join(", ", numbers)}");
 
 var length2 = numArray3.Length;
+var item = numbers[3];          // 4
 
 //Use this when you need to pass the array to a method or property that expects new
 var numArray4 = new int[]{1903, 1907, 1910};
@@ -363,11 +373,13 @@ var copy = numbers[..]; // makes a shallow copy:
 //The spread element, ..e in a collection expression adds all the elements in that expression
 int[] appendArray = [.. numbers, 11, 12, 13];
 
+Array.Find(numbers, n => n > 3);        // 4
+Array.FindIndex(numbers, n => n > 2);   // 2
 Array.Sort(numbers);                    // [1,2,3,4,5]
 Array.Reverse(numbers);                 // [5,4,3,2,1]
 Array.Fill(numbers, 0);                 // all zeros
 Array.Fill(numbers, 9, 1, 3);           // fill with 9, starting from index 1, 3 times.
-int idx = Array.IndexOf(numbers, 3);   // find index
+int idx = Array.IndexOf(numbers, 3);    // find index
 int bi  = Array.BinarySearch(numbers, 3); // requires sorted
 bool ex = Array.Exists(numbers, n => n > 3);
 var value = numbers.ElementAtOrDefault(Array.IndexOf(numbers, 3));  //Returns default value instead of throwing.
@@ -452,8 +464,8 @@ foreach (var letter in letters)
 var index = names.IndexOf("Felipe"); //If the item isn't in the list, IndexOf returns -1.
 int index = names.FindIndex(n => n.Equals("Charlie", StringComparison.OrdinalIgnoreCase));
 bool has = names.Contains("Alice");
-bool any = list.Exists(n => n.Length > 4);
-string found = list.Find(n => n[0] == 'B'); 
+bool any = names.Exists(n => n.Length > 4);
+string found = names.Find(n => n[0] == 'B'); 
 
 // Comparing 2 lists
 var list1 = new List<int> { 1, 2, 3 };
@@ -465,11 +477,11 @@ if (list1.SequenceEqual(list2))
 }
 
 // .. spread element to expand a collection (C# 12+)
-List<string> moreNames = [.. names, "Roger", "Xavier"];
+List<string> moreNames = [..names, "Roger", "Xavier"];
 
 //Combine list(s) (C# 12+)
 List<string> lastNames = ["Johnson", "Harris", "Ovechkin", "O'Brien"];
-var fullNames = [.. names, .. lastNames];
+var fullNames = [..names, ..lastNames];
 
 //get the sequence iterator that can move through the collection one element at a time
 //enumerator starts before the first element.
@@ -695,7 +707,8 @@ ages.ToList().ForEach(kvp => Console.WriteLine($"{kvp.Key}: {kvp.Value}"));
 // Transform to Dict from other collections
 List<KeyValuePair<string,int>> keyValuePairList = [
     new KeyValuePair<string, int>("Myriam", 25),
-    new KeyValuePair<string, int>("John", 45)];
+    new KeyValuePair<string, int>("John", 45)
+];
     
 Dictionary<string,int> people = keyValuePairList.ToDictionary(x => x.Key, x => x.Value);
 
@@ -859,6 +872,7 @@ static async IAsyncEnumerable<int> ReadSequenceAsync()
     foreach (var item in await nextChunk())
     {
         //Use Task.Delay inside async code for testing awaitable delays
+        //Do not use Thread.Sleep()
         await Task.Delay(3000);
 
         if (item is null) 
@@ -1358,8 +1372,8 @@ public class BankAccount
 
 
 
+#region classes & objects
 
- 
 /********************************************************************
  *                             Classess & Objects                    *
  ********************************************************************/
@@ -1690,7 +1704,7 @@ PropertyInfo? prop = type.GetProperty("Name");
 prop?.SetValue(person, "Alice");
 Console.WriteLine(prop?.GetValue(person)); // Alice
 
-
+#endregion section
 
 
 
@@ -1922,7 +1936,8 @@ protected virtual void OnVideoEncoded()
 publisher.VideoEncoded += subscriber.OnVideoEncoded;
 
 
-                                                    /*  Automated Tests */
+
+
 
 
 /********************************************************************
@@ -1994,14 +2009,28 @@ foreach(var item in scores)
 //Transforms each element
 var squares = numbers.Select(n => n * n);
 
+//Select with index:
+var indexedNumbers = numbers.Select((n, index) => $"{index}: {n}");
+
 //Filters elements based on a condition (ex: all the even numbers)
 var evenNumberList = numbers.Where(n => n % 2 == 0);
+
+//Where with index
+var indexedWhere = numbers.Where((n, index) => index % 2 == 0);
 
 //Filters elements based on a condition (ex: all the odd numbers)
 var oddNumberList = numbers.Where(n => n % 2 != 0);
 
+//Generates sequence of integers
+IEnumerable<int> quickSequence = Enumerable.Range(1, 5); // [1, 2, 3, 4, 5]
+
+IEnumerable<int> evenNumbers = Enumerable.Range(1, 5).Where(n => n % 2 == 0);
+
+//repeats a value N times
+IEnumerable<string> repeatedSequence = Enumerable.Repeat("x", 3);
+
 //Filters elements based on a condition (ex: all the prime numbers)
-var primes = Enumerable.Range(1, 19)
+var primes = Enumerable.Range(2, 19)
                        .Where(n => !Enumerable.Range(2, (int)Math.Sqrt(n) - 1).Any(d => n % d == 0));
 
 //Sorts elements in ascending order
@@ -2022,6 +2051,9 @@ var allSubjects = names.SelectMany(name => scores.Select(score => (name, score))
 
 //Removes duplicates
 var uniqueNums = new[] { 1, 2, 2, 3 }.Distinct(); // [1, 2, 3]
+
+//Dedupe based on a key selector instead of the whole object
+var uniqueByLastName = people.DistinctBy(p => p.LastName);
 
 //Gets First N Elements
 var firstThree = numbers.Take(3); // Result: [1, 2, 3]
@@ -2061,12 +2093,21 @@ var sumNums = numbers.Sum();  // 55
 //Returns the only element of a sequence or throws exception
 var single = numbers.Single(x => x > 7 && x < 9);
 
+// like Single(), but returns default instead of throwing when zero or more than one match
+var single = numbers.SingleOrDefault(x => x > 7 && x < 9);
+
 //Average of all elements
 var averageNums = numbers.Average();
 
 // Smallest/largest value
 int min = numbers.Min();  // 1
 int max = numbers.Max();  // 10
+
+//get the max element based on a key selector
+var oldestPerson = people.MaxBy(p => p.Age); // returns the Person, not just the age
+
+//get the min element based on a key selector
+var youngestPerson = people.MinBy(p => p.Age); // returns the Person, not just the age
 
 //Aggregate (accumulator function) to multiply all numbers using a seed = 1
 int product = numbers.Aggregate(1, (accumulated, x) => accumulated * x); 
@@ -2089,8 +2130,14 @@ var greaterThanTen = numbers.First(x => x > 10);
 //Last element
 numbers.Last();  // 10
 
+//ike FirstOrDefault(), but from the end
+var lastOrDefault = numbers.LastOrDefault(); // 0 (for int)
+
 //Element at specific index
 var elementAtPos = numbers.ElementAt(3);  // 4 (zero-indexed)
+
+//safe version of ElementAt(), returns default instead of throwing on out-of-range index
+var elementAtOrDefault = numbers.ElementAtOrDefault(3);  // 4 (zero-indexed)
 
 //Returns default if empty
 var defaultIfEmpty = numbers.DefaultIfEmpty(99);  // [99]
@@ -2129,20 +2176,36 @@ people.Join(
     o => o.CustomerId,
     (c, o) => new { c.Name, o.Total });
 
+//Left Join
+employees.LeftJoin(
+    orders,
+    employee => employee.Id,
+    order => order.EmployeeId,
+    (employee, order) => new { 
+        employee.Name, 
+        Amount = order != null ? order.Amount : 0M
+    })
+    .ToList();
+
 //Converts to dictionary
 Dictionary<string, string> enumerableToDict = people.ToDictionary(p => p.LastName, p => p.FullName);
 
 //Converts to HashSet
 HashSet<int> hashedNums = numbers.ToHashSet();  // HashSet<T>
 
-//Generates sequence of integers
-IEnumerable<int> quickSequence = Enumerable.Range(1, 5); // [1, 2, 3, 4, 5]
-
-IEnumerable<int> evenNumbers = Enumerable.Range(1, 5).Where(n => n % 2 == 0);
-
 // Converts IEnumerable<int> → IEnumerable<int?>
 // treat every element as this type going forward.
 List<int?> nullableScores = scores.Cast<int?>().ToList();
+
+//add a single element to the end/start of a sequence without mutating it
+var withExtra = numbers.Append(11).Prepend(0);
+
+//splits a sequence into batches of a given size
+var batches = numbers.Chunk(3); // [[1,2,3],[4,5,6],[7,8,9],[10]]
+
+//pairs up elements from two (or three) sequences by position
+var zipped = names.Zip(scores, (name, score) => $"{name}: {score}");
+
 
 
 
@@ -2726,11 +2789,31 @@ Console.WriteLine($" Enum value {TransactionType.Deposit}");
 //cast an enum to get the int value
 var enumInt = (int)FileMode.Create;
 
+// Retrieves an array of the values of the enum constants
+var menuValues = Enum.GetValues<TransactionType>();
+
 // Method that validates a string against the enum
 bool IsValidMode(string input)
 {
     return Enum.TryParse<FileMode>(input, ignoreCase: true, out _);
 }
+
+// Return the enum value instead of just true/false
+bool TryGetPosition(string input, out DefaultPosition position)
+{
+    return Enum.TryParse<FileMode>(input, ignoreCase: true, out position);
+}
+
+
+// print each of the enum string values
+foreach (var option in Enum.GetNames(typeof(FileMode)))
+    Console.WriteLine(option);
+
+//print both the name and the underlying integer value of each enum
+foreach (FileMode option in Enum.GetValues(typeof(FileMode)))
+    Console.WriteLine($"{(int)option}. {option}");
+
+
 
 
 
@@ -2893,3 +2976,12 @@ p.SayHello(); */
 //To compile and execute a .NET Core project enter at a command prompt the command: 
 //  dotnet run
 
+
+
+
+
+
+
+/********************************************************************
+ *                             Unit Tests                           *
+ ********************************************************************/

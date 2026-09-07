@@ -49,6 +49,15 @@ To automatically rebuild and re-runs your application (hot reload) enter at a co
 
   dotnet watch
 
+/*
+To add a new Nuget package enter at a command prompt the command: 
+*/
+
+  dotnet add package [packageName]
+
+
+
+
 
 /********************************************************************
  *                   SDK default project templates                   *
@@ -116,6 +125,36 @@ xUnit Test Project                         xunit                         [C#],F#
 */
 
 
+
+
+/********************************************************************
+ *                  .Net Console application                        *
+ ********************************************************************/
+
+
+//use the dotnet utility from the command line.
+
+    //To create a new .NET Core project enter at a command prompt the command (optionally add project name i.e. "WebAPIClient"): 
+
+dotnet new console --name WebAPIClient
+dotnet new console -n WebAPIClient
+
+//To open the console project in Visual Studio
+cd WebAPIClient // Navigate into the new project directory
+WebAPIClient.csproj     // type the name of the project followed by .csproj
+
+
+//To compile a .NET Core project enter at a command prompt the command: 
+//  dotnet build
+
+
+//To compile and execute a .NET Core project enter at a command prompt the command: 
+//  dotnet run
+// 
+
+
+
+#region Middleware
 
 
 /********************************************************************
@@ -219,9 +258,10 @@ context.RequestServices;
 // Items shared between middleware
 context.Items;
 
+#endregion
 
 
-
+#region DI
 
 /********************************************************************
  *                       Dependency injection                       *
@@ -268,12 +308,12 @@ builder.Services.AddScoped<>();
 // Service created each time it is requested
 builder.Services.AddTransient<>();
 
+#endregion
 
-
-
+#region Migrations
 
 /********************************************************************
- *                    .Net Entity Framework (EF)                    *
+ *                      Entity Framework Migrations                 *
  ********************************************************************/
 
 
@@ -288,6 +328,8 @@ dotnet add package Microsoft.EntityFrameworkCore.SqlServer
 To Add the EF package tools in VS Code 
 */
 dotnet add package Microsoft.EntityFrameworkCore.Tools
+// Or using Package Manager Console in VS
+Install-Package Microsoft.EntityFrameworkCore.Tools
 
 /*
 To restore packages in VS Code 
@@ -304,9 +346,17 @@ dotnet tool install --global dotnet-ef
     Entity Framework (EF) Core Migrations
 */
 
+
     //  migrations command generates code to create the initial database schema (might need to have running the project first)
     //   The InitialCreate argument is used to name the migrations
+
+        // using Package Manager Console 
+        Add-Migration InitialCreate
+        Update-Database
+
+        // using terminal CLI
         dotnet ef migrations add InitialCreate
+        dotnet ef database update
 
 
     //  To undo this action, use:
@@ -323,8 +373,30 @@ dotnet tool install --global dotnet-ef
     dotnet ef database drop
 
 
+// InitialCreate Migration auto-generated class
+public partial class InitialCreate : Migration
+{
+    // apply
+    protected override void Up(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.CreateTable(
+            name: "Authors",
+            columns: table => new {
+                Id = table.Column<int>(nullable: false)
+                    .Annotation("SqlServer:Identity", "1, 1"),
+                Name = table.Column<string>(nullable: false)
+            },
+            constraints: table => table.PrimaryKey("PK_Authors", x => x.Id));
+    }
 
+    // rollback
+    protected override void Down(MigrationBuilder migrationBuilder)
+        => migrationBuilder.DropTable("Authors");
+}
 
+#endregion
+
+#region Project Struct
 
 /********************************************************************
  *                .NET Project File Structures                       *
@@ -483,22 +555,27 @@ MyApp.Console/
 */
 
 
+#endregion
 
 
 
+#region EF DbContext
 
-
-
-/********************************************************************
- *                           EF DbContexts                            *
- ********************************************************************/
+/*****************************************************************************
+ *                    Entity Framework DbContexts                            *
+ *****************************************************************************/
         // DbContext has a Scoped service lifetime because:
         // 1. It ensures that a new instance of DbContext is created per request
         // 2. DB connections are a limited and expensive resource
-        // 3. DbContext is not thread-safe. Scoped avoids to concurrency issues
+        // 3. DbContext is not thread-safe. Scoped avoids concurrency issues
         // 4. Makes it easier to manage transactions and ensure data consistency
         // 5. Reusing a DbContext instance can lead to increased memory usage
 
+// Add the EF Core namespace in your DbContext class
+// using Microsoft.EntityFrameworkCore;
+
+// Register the database context within DI container.
+builder.Services.AddDbContext<YourApiContext>();    
 
             // key patterns to internalize
 
@@ -522,7 +599,7 @@ dbContext.Database.BeginTransactionAsync();
     // AsNoTracking()
 
 // use for GET operations. EF skips the overhead of watching the entity for changes
-await dbContext.Products.AsNoTracking();
+var readOnlyProducts = dbContext.Products.AsNoTracking().ToList();
 
     // ExecuteUpdateAsync()
 
@@ -649,7 +726,357 @@ if(deleted == 0) return NotFound();
 /* return NoContent(); */
 
 
+        // Eager loading
 
+// Load related data upfront with the main query
+var books = context.Books
+    .Include(b => b.Author)
+    .ThenInclude(a => a.Publisher)
+    .ToList();
+
+
+        // Lazy Loading
+
+// Load related data only when you actually access it. triggers one query per row
+// N+1 query problem
+var name = book.Authors.ToList();
+
+
+        // EF ChangeTracker State
+
+// Entity States: Added, Modified, Deleted, Unchanged, Detached
+
+//to get the Entity State
+var state = context.Entity(book).State;
+
+// EF Core's change tracker
+var entries = dbContext.ChangeTracker.Entries();
+
+foreach(var entry in entries)
+{
+    Console.WriteLine($"{entry.Entity.GetType().Name} - {entry.State}");    
+}
+
+// detecting all Tracker changes
+var changes = dbContext.ChangeTracker.DetectChanges();
+
+// New object (Detached state)
+var newBook = new Book
+{
+    Id = 1,
+    Title = "Clean Code",
+    Price = 45
+};
+
+context.Entity(newBook).State; // Detached
+
+// Adding object - start being tracked by dbContext EF Core
+context.Books.Attach(newBook);
+context.Books.Add(newBook);
+
+// Attach() vs Add()
+
+context.Books.Add(book); // => Status Added => SaveChanges() → INSERT
+
+context.Books.Attach(book); // Status Unchanged => Start tracking =>  SaveChanges() → No action
+
+// Explicit EF Core Entity State change
+dbContext.Entry(book).State = "Modified";
+
+
+            // Explicit database transaction
+
+// Either all the database operations inside the transaction succeed, or they are rolled back.
+
+
+using var transaction = dbContext.Database.BeginTransaction();
+
+try
+{
+    dbContext.Books.Add(newBook);
+    dbContext.SaveChanges();
+    transaction.Commit();
+}
+catch
+{
+    transaction.Rollback();
+    throw;
+}
+
+            // Managing SQL Server Db - Optimistic Concurrency
+
+public class Book
+{
+    [Timestamp] // concurrency token
+    public byte[] RowVersion { get; set; }
+}
+
+// When there is a simultaneous change, EF Core throws DbUpdateConcurrencyException
+
+try
+{
+    context.SaveChanges();
+}
+catch (DbUpdateConcurrencyException ex) // Resolve the conflict
+{
+    var entry = ex.Entries.Single(); // EF Core's tracking information (Entity, CurrentValues, OriginalValues, State)
+    var client = (Book)entry.Entity;
+
+    var databaseValues = await entry.GetDatabaseValuesAsync();
+
+    if (databaseValues is null)
+        throw new InvalidOperationException(
+            "The Book was deleted by another user.");
+
+    var dbBook = (Book)databaseValues.ToObject();
+
+    // Merge rule: take highest price
+    client.Price = Math.Max(client.Price, dbBook.Price);
+
+    // Update original RowVersion so EF can retry
+    entry.OriginalValues.SetValues(databaseValues);
+
+    await db.SaveChangesAsync();
+}
+
+// EF Core configuring concurrency
+
+protected override void OnModelCreating(
+    ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<Book>()
+        .Property(b => b.RowVersion)
+        .IsRowVersion()
+        .IsConcurrencyToken();
+}
+
+public class Book
+{
+    public byte[] RowVersion { get; set; } // Then no need to add Data Annotation
+}
+
+
+            // Shadow Properties
+
+
+// Properties that exist in EF model and DB table but are not defined on the C# entity class
+
+public class Book
+{
+    public int Id { get; set; }
+
+    public string Title { get; set; } = string.Empty;
+
+    public bool IsDeleted { get; set; }
+}
+
+// LastModified  ← Shadow Property
+// LastModified only exists in EF Core's tracking/model metadata
+modelBuilder.Entity<Book>().Property<DateTime>("LastModified");
+
+var book = new Book();
+book.LastModified = DateTime.Now; // ❌ This won't compile
+
+// Setting a Shadow Property
+_dbContext.Entry(book).Property("LastModified").CurrentValue = DateTime.UtcNow;
+
+// Reading a Shadow Property
+var lastModified = _dbContext.Entry(book).Property<DateTime>("LastModified").CurrentValue;
+
+// Querying a Shadow Property
+var recentlyModifiedBooks = _dbContext.Books
+    .Where(book => EF.Property<DateTime>(book, "LastModified") > DateTime.UtcNow.AddDays(-7))
+    .ToList();
+
+
+            // Global Query Filter
+
+// It's a condition that EF Core automatically applies to every query 
+
+// example: every EF Core Book queries automatically return only books where IsDeleted is false
+modelBuilder.Entity<Book>().HasQueryFilter(b => !b.IsDeleted);
+
+var books = context.Books
+    .Where(b => !b.IsDeleted) // this query is added automatically by EF
+    .ToList();
+
+// override a Global Query Filter
+var allBooks = context.Books
+    .IgnoreQueryFilters()
+    .ToList();
+
+// Multi-tenancy
+modelBuilder.Entity<Book>().HasQueryFilter(b => b.TenantId == _currentTenantId);
+
+
+            // raw SQL in EF Core
+
+var books = context.Books
+    .FromSqlRaw("SELECT * FROM Books WHERE Price > {0}", 20)
+    .ToList();
+
+context.Database.ExecuteSqlRaw("UPDATE Books SET Price = Price * 1.1");
+
+
+#endregion
+
+
+
+#region EF Models
+
+/***************************************************************************
+ *                        EF Model Configurations                           *
+ ***************************************************************************/
+
+
+// The database context is the main class that coordinates EF functionality for a data model
+public class YourApiContext : DbContext
+{   
+    public DbSet<YourModel> YourModels { get; set; } = null!;
+
+    // Option 1 - DbContext receives its configuration from outside.
+    // Preferable for ASP.NET Core applications
+    public YourApiContext(DbContextOptions<YourApiContext> options) : base(options)
+    {}
+
+    // Option 2 - use it when DbContext is responsible for configuring itself.
+    // Then we can create the context directly: using var context = new YourApiContext();
+    protected override void OnConfiguring(DbContextOptionsBuilder options)
+        => options.UseSqlServer("connection-string-here");
+
+    // configure your model Entities here (classes)
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Use inline method entityType configuration for extensive entity property config
+        modelBuilder.Entity<Customer>(entity =>
+        {
+            entity.ToTable("Customers");
+            entity.HasKey(c => c.Id);
+            //...
+        });
+
+        // Use Entity Type builder chain methods to configure entity Relationships
+        // One-to-one
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.ShippingAddress)
+            .WithOne(sa => sa.Order)
+            .HasForeignKey<ShippingAddress>(sa => sa.OrderId);
+
+        // configure Entity Primary key
+        entity.HasKey(x => x.Id);
+
+        // Composite key (combination of both => primary key)
+        entity.HasKey(x => new
+        {
+            x.OrderId,
+            x.ProductId
+        });
+
+        // Required property
+        entity.Property(x => x.Name)
+            .IsRequired();
+
+        // Maximum length
+        entity.Property(x => x.Name)
+            .HasMaxLength(100);
+
+        // Decimal precision (100000.00)
+        entity.Property(x => x.Price)
+            .HasPrecision(18, 2);
+
+        // One-to-many (start from the entity that contains the foreign key)
+        modelBuilder.Entity<Book>()
+            .HasOne(b => b.Author)
+            .WithMany(a => a.Books)
+            .HasForeignKey(b => b.AuthorId);
+
+        // Many-to-many
+        modelBuilder.Entity<Product>()
+                .HasMany(p => p.Tags)
+                .WithMany(t => t.Products);
+
+        // Index
+        entity.HasIndex(x => x.Email);
+
+        // Unique index
+        entity.HasIndex(x => x.Email)
+            .IsUnique();
+
+        // Delete related entities automatically.
+        modelBuilder.Entity<Product>().OnDelete(DeleteBehavior.Cascade);
+
+        //Prevent deletion when related entities exist.
+        modelBuilder.Entity<Product>().OnDelete(DeleteBehavior.Restrict);
+
+        base.OnModelCreating(modelBuilder);
+
+        // Data Seeding
+        modelBuilder.Entity<Customer>().HasData(
+            new Customer { Id = 1, FirstName = "J.K.", LastName = "Rowling" },
+            new Customer { Id = 2, FirstName = "Jim", LastName = "Carrey" }
+        );
+    }
+}
+
+
+            // Entity Relationships
+
+// One-to-Many
+
+public class Book
+{
+    public Author Author {get; set;}
+}
+
+public class Author
+{
+    public ICollection<Book> Books {get; set;}
+}
+
+
+// Many-to-many (no join entity needed)
+public class Student
+{
+    public ICollection<Course> Courses { get; set; }
+}
+
+public class Course
+{
+    public ICollection<Student> Student { get; set; }
+}
+
+
+// Creating a separate Entity Type Configuration class
+
+public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
+{
+    public void Configure(EntityTypeBuilder<Customer> entity)
+    {
+        entity.ToTable("Customers");
+        entity.HasKey(c => c.Id);
+        
+        // ... and more configuration steps
+    }
+}
+
+// Then your DbContext becomes much cleaner
+public class YourApiContext : DbContext
+{
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new CustomerConfiguration());
+        //modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly); => automatically finds configuration classes in the assembly
+        base.OnModelCreating(modelBuilder);
+    }
+}
+
+
+#endregion
+
+
+
+
+#region EF WebAPI 
 
 /********************************************************************
  *                       ASP.NET Core Web API                        *
@@ -664,11 +1091,16 @@ if(deleted == 0) return NotFound();
 // Need to go to the new directory project
 // cd TodoApi
 
+// If not using scaffolding, add EF Core manually with Package Manager Console
+// Install-Package Microsoft.EntityFrameworkCore
+
 // Add a NuGet package for InMemory DB
 // dotnet add package Microsoft.EntityFrameworkCore.InMemory
 
 // Add a NuGet package for SQL Server
 // dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+// Or with Package Manager Console
+// Install-Package Microsoft.EntityFrameworkCore.SqlServer
 
 // Add a NuGet package for MySQL
 // dotnet add package Microsoft.EntityFrameworkCore.MySql
@@ -819,18 +1251,6 @@ app.MapStaticAssets();
 //Starts the web server and begins listening for requests.
 app.Run();
 
-            // DbContext
-    
-// The database context is the main class that coordinates Entity Framework functionality for a data model
-public class YourApiContext : DbContext
-{
-    public YourApiContext(DbContextOptions<YourApiContext> options) : base(options)
-    {}
-
-    public DbSet<YourModel> YourModels { get; set; } = null!;
-
-}
-
             // Api Controllerss
 
 [ApiController]  // Enables automatic model validation, binding inference
@@ -875,9 +1295,9 @@ public class ProductsController : ControllerBase
     }
 }
 
+#endregion
 
-
-
+#region Minimal API
 
 /********************************************************************
  *                    ASP.NET Core Minimal API                      *
@@ -931,7 +1351,7 @@ group.MapGet("/", async (IProductService svc) => await svc.GetAllAsync());
 
 group.MapGet("/{id}", async (int id, IProductService svc) => 
 {   
-    var product = await _service.GetByIdAsync(id);
+    var product = await svc.GetByIdAsync(id);
     ProductDto productDto = MapProduct(product);
     return game is null ? Results.NotFound() : Results.Ok(productDto);
 });
@@ -998,3 +1418,120 @@ public class ProductDto
     public decimal Price { get; set; }
 }
 // [ApiController] auto-returns 400 if validation fails
+
+
+#endregion
+
+#region Architecture
+
+
+/********************************************************************
+ *                      Architectural Patterns                      *
+ ********************************************************************/
+
+            // Repository pattern
+
+// An abstraction between business logic (Domain) and ORM (Object Relational Mapping)
+// Principles: Decoupling, Testability, Abstraction
+
+public interface IProductRepository
+{
+    Task<Product?> GetByIdAsync(int id);
+    Task<IReadOnlyList<Product>> GetAllAsync();
+    Task AddAsync(Product product);
+    void Update(Product product);
+    void Delete(Product product);
+}
+
+public class ProductRepository : IProductRepository
+{
+    private readonly ApiDbContext _context;
+
+    //private readonly DbSet<Product> _set; // Can optionally add the EF Set
+
+    public ProductRepository(ApiDbContext context)
+    {
+        _context = context;
+    }
+    
+    public async Task<Product?> GetByIdAsync(int id)
+    {
+        return await _context.Products.AsNoTracking().FindAsync(new object[] { id });
+    }
+
+    public async Task AddAsync(Product product)
+    {
+        await _context.Products.AddAsync(product);
+    }
+
+    // And so on...
+}
+
+
+            // Unit of Work pattern
+
+// UOF handles business operations on repositories and saves all changes as a single transaction
+public interface IUnitOfWork
+{
+    IProductRepository Products { get; }
+    Task<int> SaveChangesAsync();
+}
+
+public class UnitOfWork : IUnitOfWork
+{
+    public readonly AppDbContext _dbContext;
+    public IProductRepository Products { get; }
+
+    public UnitOfWork(AppDbContext context, IProductRepository products)
+    {
+        _dbContext = context ?? throw new ArgumentNullExcpetion(nameof(context));
+        Products = products;
+        // Products = _dbContext.Products;
+        // Products = new ProductRepository(_dbContext);
+    }
+
+    public async Task<int> SaveChangesAsync()
+    {
+        return await _dbContext.SaveChangesAsync();
+    }
+}
+
+
+            // Unit of Work & Repository pattern combined
+
+public class ProductService
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    public ProductService(IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork(_dbContext);
+    }
+
+    public async Task CheckoutAsync(int orderId)
+    {
+        try
+        {
+            var order = await _unitOfWork.Orders.GetByIdAsync(orderId);
+
+            // Perform validation and other operations...
+
+            foreach(var item in orders.Items)
+            {
+                var product = await _unitOfWork.Products.GetByIdAsync(item.ProductId);
+                // product.Stock -= item.Quantity; // Can do some operations with the Entity
+                _unitOfWork.Products.Uptade(product);
+            }
+
+            // Saves all repository changes in 1 single transaction
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+            
+    }
+}
+
+#endregion
