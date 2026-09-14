@@ -9,7 +9,13 @@ using System.Reflection;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
+#region Printing
 
 /********************************************************************
  *                               Printing                           *
@@ -79,9 +85,9 @@ Console.WriteLine($"{value, 10}"); // right-aligned
 Console.WriteLine($"{value, -10}"); // left-aligned
 
 
+#endregion
 
-
-
+#region numbers
 
 /********************************************************************
  *                               Numbers                            *
@@ -160,12 +166,12 @@ bool neq = guid != g;
 bool eq2 = guid.Equals(g);   
 
 
+#endregion
 
-
-
+#region strings
 
 /********************************************************************
- *                               Strings                            *
+ *                              Stringss                            *
  ********************************************************************/
 
 
@@ -206,7 +212,7 @@ var endsWith = helloWorld.EndsWith("World");
 int index = helloWorld.IndexOf("World");
 var capitalLetter = char.ToUpper(helloWorld[0]);
 var concatenatedStr = string.Concat("Hello", " ", "World"); // "Hello World"
-var hasPunctuation = Char.IsPunctuation(character);
+var hasPunctuation = char.IsPunctuation(character);
 var isLetter = char.IsLetter(character);
 var isDigit = char.IsDigit(character);
 var isLetterOrDigit = char.IsLetterOrDigit(character);
@@ -297,8 +303,9 @@ while (span.Length > 0)
 }
 
 
+#endregion
 
-
+#region types
 
 
 /********************************************************************
@@ -331,9 +338,9 @@ var def = default(int);
 var nullForgivingOperator = default(int)!; //suppresses null compiler warnings
 
 
+#endregion
 
-
-
+#region arrays
 
 /********************************************************************
  *                                Arrays                            *
@@ -398,7 +405,7 @@ Array.Copy(numArray, copy1, numArray.Length);
 int[] copy2 = numArray2.ToArray();
 
 //Anonymous implicitely Typed array
-var anonArray = new[] { new { name = "apple", diam = 4 }, new { name = "grape", diam = 1 } };
+var anonArray = new object[] { new { name = "apple", diam = 4 }, new { name = "grape", diam = 1 } };
 
 // Create a jagged 2D array:
 int[][] twoD = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
@@ -412,7 +419,9 @@ int cols = rect.GetLength(1);
 
 Array.Resize(ref numbers, numbers.Length + 1);
 
+#endregion
 
+#region lists
 
 /********************************************************************
  *                          Lists                                   *
@@ -513,7 +522,9 @@ Span<char> slice = c.Slice(1, 2); // b, c
 //Remove duplicates from a list:
 var unique = new HashSet<string>(names);
 
+#endregion
 
+#region dictionaries
 
 /********************************************************************
  *                    Dictionaries<TKey, TValue>                   *
@@ -755,9 +766,9 @@ dict["Alice"] = 25;
 dict["alice"] = 30;  // Updates the same entry
 Console.WriteLine(dict["ALICE"]);  // 30
 
+#endregion
 
-
-
+#region hashsets
 
 
 /********************************************************************
@@ -807,9 +818,9 @@ hashSet.IsSupersetOf(set2);
 hashSet.Overlaps(set2);             //True if A and B share at least one element
 hashSet.SetEquals(set2);            //True if A and B contain exactly the same elements
 
+#endregion
 
-
-
+#region loops
 
 /********************************************************************
  *                          Loops & Iterators                       *
@@ -946,16 +957,17 @@ class NumberBox
     }
 }
 
+#endregion
 
 
-
+#region dates
 
 /********************************************************************
  *                                Datess                          *
  ********************************************************************/
 // DateTime are struct value type (not reference type)
 
-var newDateTime = new DateTime(); //Min value date 1/1/0001 12:00:00 AM
+var defaultDateTime = new DateTime(); //Min value date 1/1/0001 12:00:00 AM
 var newDateTime = new DateTime(1989, 5, 10);
 var exactDateTime = new DateTime(2025, 4, 9, 14, 30, 0); //+ hour, min, sec
 DateTime now = DateTime.Now; //Local date + time
@@ -1063,9 +1075,9 @@ Console.Write($"{newDateTime:yyyy-MM-dd}"); // 2025-09-13
 Console.Write($"{newDateTime:MMM dd, yyyy}"); // Sep 13, 2025
 Console.Write($"{newDateTime:HH:mm:ss}"); // 14:30:25
 
+#endregion
 
-
-
+#region methods
 
 
 /********************************************************************
@@ -1217,7 +1229,7 @@ public static void OuterMethod()
     InnerHelper();
 }
 
-            //Accessors
+            //Property Accessors
 
 //get accessor
 private List<string> _tags;
@@ -1368,7 +1380,7 @@ public class BankAccount
 */ 
 
 
-
+#endregion
 
 
 
@@ -1704,9 +1716,9 @@ PropertyInfo? prop = type.GetProperty("Name");
 prop?.SetValue(person, "Alice");
 Console.WriteLine(prop?.GetValue(person)); // Alice
 
-#endregion section
+#endregion classes & objects
 
-
+#region generics
 
 
 /********************************************************************
@@ -1829,9 +1841,9 @@ public class Example<T1, T2>
 
 var ex = new Example<string, int>();
 
+#endregion
 
-
-
+#region events
 
 /********************************************************************
  *                     Events & Delegates                           *
@@ -1936,9 +1948,9 @@ protected virtual void OnVideoEncoded()
 publisher.VideoEncoded += subscriber.OnVideoEncoded;
 
 
+#endregion
 
-
-
+#region async
 
 /********************************************************************
  *                 Asynchronous programming                         *
@@ -1977,7 +1989,9 @@ Console.WriteLine("Waiting for all downloads...");
 
 await Task.WhenAll(task1, task2, task3);
 
+#endregion
 
+#region LINQ
 
 
 /********************************************************************
@@ -2206,9 +2220,9 @@ var batches = numbers.Chunk(3); // [[1,2,3],[4,5,6],[7,8,9],[10]]
 //pairs up elements from two (or three) sequences by position
 var zipped = names.Zip(scores, (name, score) => $"{name}: {score}");
 
+#endregion
 
-
-
+#region tuples
 
 /********************************************************************
  *                      Tuples - ValueType<T1, T2,...>               *
@@ -2376,9 +2390,9 @@ var (x, y) = new Point
 };
 
 
+#endregion
 
-
-
+#region records
 
 
 /********************************************************************
@@ -2477,9 +2491,9 @@ currentBalance += transaction switch
 public record ThreeDimensionPoint(int X, int Y, int Z) : Point(X, Y);
 
 
+#endregion
 
-
-
+#region patterns
 
 
 /********************************************************************
@@ -2673,9 +2687,9 @@ decimal nestedPattern = dog switch
     }
 };
 
+#endregion
 
-
-
+#region files
 
 /********************************************************************
  *                            Files Processing                        *
@@ -2714,6 +2728,19 @@ catch (DirectoryNotFoundException ex)
     Console.WriteLine(ex);
 }
 
+            // Trace Class
+
+// Use to trace the execution of your code
+/*using System.Diagnostics;*/
+
+StreamWriter logFile = File.CreateText("calculator.log");
+System.Diagnostics.Trace.Listeners.Add(new TextWriterTraceListener(logFile));
+System.Diagnostics.Trace.AutoFlush = true;
+System.Diagnostics.Trace.WriteLine("Log an operation");
+
+
+            // FileStream
+
 //using FileStream
 FileStream? file = null;
 FileInfo? fileInfo = null;
@@ -2732,6 +2759,63 @@ finally
 {
     file?.Close();
 }
+
+
+            // Write to a JSON
+
+// Need to install the Newtonsoft.Json NuGet package 
+// prioritize System.Text.Json => modern, built-in standard, optimized 
+/*using Newtonsoft.Json;*/
+
+// Serialize JSON
+
+Product product = new Product();
+product.Name = "Apple";
+product.Expiry = new DateTime(2008, 12, 28);
+product.Sizes = new string[] { "Small" };
+
+string json = JsonConvert.SerializeObject(product);
+// {
+//   "Name": "Apple",
+//   "Expiry": "2008-12-28T00:00:00",
+//   "Sizes": [
+//     "Small"
+//   ]
+// }
+
+// Deserialize JSON
+
+string json = @"{
+  'Name': 'Bad Boys',
+  'ReleaseDate': '1995-4-7T00:00:00',
+  'Genres': [
+    'Action',
+    'Comedy'
+  ]
+}";
+
+Movie m = JsonConvert.DeserializeObject<Movie>(json);
+string name = m.Name;  // Bad Boys
+
+// LINQ to JSON
+
+JArray array = new JArray();
+array.Add("Manual text");
+array.Add(new DateTime(2000, 5, 23));
+
+JObject o = new JObject();
+o["MyArray"] = array;
+
+string json = o.ToString();
+// {
+//   "MyArray": [
+//     "Manual text",
+//     "2000-05-23T00:00:00"
+//   ]
+// }
+
+
+        // System.IO.* Operations
 
 // Determines whether the specified file exists
 var fileExists = File.Exists("FilePath//");
@@ -2760,7 +2844,9 @@ Directory.CreateDirectory("FilePath//");
 // Moves file from source to a new destination. Optional overwrite if file exists
 File.Move("sourcePath", "destinationPath", overwrite: true);
 
+#endregion
 
+#region enums
 
 /********************************************************************
  *                                  Enums                           *
@@ -2813,9 +2899,9 @@ foreach (var option in Enum.GetNames(typeof(FileMode)))
 foreach (FileMode option in Enum.GetValues(typeof(FileMode)))
     Console.WriteLine($"{(int)option}. {option}");
 
+#endregion
 
-
-
+#region structs
 
 /********************************************************************
  *                                   Structs                        *
@@ -2876,9 +2962,9 @@ Scale(ref position, 2f);// position  { X = 6, Y = 8 }
 //record struct
 public record struct RecordStruct(int X, int Y); // Immutable, value equality, with-expressions
 
+#endregion
 
-
-
+#region http
 
 
 /********************************************************************
@@ -2894,9 +2980,9 @@ var json = await client.GetStringAsync("https://jsonplaceholder.typicode.com/pos
 //deserialize a JSON response into a C# objects
 var repositories = await client.GetFromJsonAsync<List<object>>("https://api.github.com/orgs/dotnet/repos");
 
+#endregion
 
-
-
+#region regex
 
 /********************************************************************
  *                                Regex                             *
@@ -2911,8 +2997,9 @@ var words = Regex.Matches(sentence, @"\b\w+\b").Select(m => m.Value);
 //match letters only
 var words = Regex.Matches(sentence, @"\b[a-zA-Z]+\b").Select(m => m.Value);
 
+#endregion
 
-
+#region files
 
 /********************************************************************
  *                    file-based C# programs                        *
@@ -2954,34 +3041,254 @@ class Person
 var p = new Person { Name = "Ivan" };
 p.SayHello(); */
 
+#endregion
 
 
+#region Unit Tests
+
+/********************************************************************
+ *                        Unit Tests (xUnit)                        *
+ ********************************************************************/
+
+// Scope => Single class/method in isolation 
+
+// Project setup
+/*
+dotnet new xunit -n MyApp.Tests
+dotnet add MyApp.Tests reference ../MyApp/MyApp.csproj
+dotnet add MyApp.Tests package Moq
+dotnet add MyApp.Tests package FluentAssertions   # optional, common in interviews
+*/
+
+            // [Fact] vs [Theory]
+
+// [Fact] => a single, fixed test case
+
+public class CalculatorTests
+{
+    [Fact]
+    public void Add_TwoPositiveNumbers_ReturnsSum()
+    {
+        // Arrange
+        var calculator = new Calculator();
+
+        // Act
+        var result = calculator.Add(2, 5);
+
+        // Assert
+        Assert.Equal(7, result);
+    }
+}
+
+
+// [Theory] => parameterized test; runs once per data source entry
+
+public class CalculatorTests
+{
+    [Theory]
+    [InlineData(5, 7, 12)]
+    [InlineData(-1, 1, 0)]
+    [InlineData(0, 0, 0)]
+    public void Add_MultipleValues_ReturnsSum(int a, int b, int expected)
+    {
+        var calculator = new Calculator();
+        var result = calculator.Add(a, b);
+        Assert.Equal(expected, result);
+    }
+}
+
+
+// [MemberData] => (static property/method returning IEnumerable<object[]>)
+
+public class CalculatorTests
+{
+    public static IEnumerable<object[]> DivisionCases =>
+        new List<object[]>
+        {
+            new object[]{ 10, 2, 5},
+            new object[] { 9, 3, 3 },
+        };
+    
+    [Theory]
+    [MemberData(nameof(DivisionCases))]
+    public void Divide_ReturnsExpected(int a, int b, int expected)
+    {
+        var calculator = new Calculator();
+        var result = calculator.Add(a, b);
+        Assert.Equal(expected, result);
+    }
+}
+
+
+            // Common Assertions
+
+Assert.Equal(expected, actual);
+Assert.NotEqual(a, b);
+Assert.True(condition);
+Assert.Null(obj);
+Assert.NotNull(obj);
+Assert.Contains(item, collection);
+Assert.Empty(collection);
+Assert.IsType<T>(obj);
+Assert.Throws<ArgumentNullException>(() => ServiceContainer.DoWork(null));
+await Assert.ThrowsAsync<InvalidOperationException>(() => service.DoWorkAsync());
+
+
+            // Test Lifecycle & Fixtures
+
+// xUnit creates a new instance of the test class for every test method
+public class OrderServiceTests : IDisposable
+{
+    private readonly OrderService _orderService;
+
+    public OrderServiceTests() => _orderService = new OrderService();
+    
+    public Dispose()
+    {}
+
+    [Fact]
+    public void CalculateTotal_ReturnsCorrectTotal()
+    {
+        var result = _orderService.CalculateTotal(10, 3);
+
+        Assert.Equal(30, result);
+    }
+}
+
+// Fixture
+
+// A fixture is an object used to set up and manage resources needed by tests.
+
+public class DatabaseFixture : IDisposable
+{
+    public AppDbContext Context { get; }
+    public DatabaseFixture() => Context = CreateInMemoryContext();
+    public Dispose() => Context.Dispose();
+
+    private AppDbContext CreateInMemoryContext()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase("TestDatabase")
+            .Options;
+
+        return new AppDbContext(options);
+    }
+}
+
+public class RepositoryTests : IClassFixture<DatabaseFixture> // it requires a DatabaseFixture
+{
+    private readonly DatabaseFixture _fixture;
+    public RepositoryTests(DatabaseFixture fixture) => _fixture = fixture;
+
+    // Example using _fixture
+    [Fact]
+    public void AddOrder_AddsOrderToDatabase()
+    {
+        // Arrange
+        var repository = new OrderRepository(_fixture.Context);
+
+        var order = new Order
+        {
+            Id = 1,
+            CustomerName = "John"
+        };
+
+        // Act
+        repository.Add(order);
+        _fixture.Context.SaveChanges();
+
+        // Assert
+        var savedOrder = _fixture.Context.Orders.Find(1);
+        Assert.NotNull(savedOrder);
+    }
+
+    [Fact]
+    public void Test2()
+    {
+    }
+
+    [Fact]
+    public void Test3()
+    {
+    }
+}
+
+
+            // Mocking with Moq
+
+public class OrderServiceTests
+{
+    [Fact]
+    public async Task PlaceOrder_ValidOrder_SavesToRepository()
+    {
+        // Arrange
+        var mockRepo = new Mock<IOrderRepository>();
+        mockRepo.Setup(r => r.SaveAsync(It.IsAny<Order>()))
+            .ReturnsAsync(true);
+
+        var sut = new OrderService(mockRepo.Object);
+        var order = new Order { Id = 1, Total = 100 };
+
+        // Act
+        var result = await sut.PlaceOrderAsync(order);
+
+        // Assert
+        Assert.True(result);
+        mockRepo.Verify(r => r.SaveAsync(order), Times.Once);
+    }
+}
+
+// Testing Controllers (unit-level)
+
+public class ProductControllerTests
+{
+    [Fact]
+    public async Task GetProductById_ExistingId_Returns_Ok()
+    {
+        // Arrange
+        var mockService = new Mock<IProductService>();
+        mockService.Setup(ps => ps.GetByIdAsync(1))
+            .ReturnsAsync(new Product { Id = 1, Name = "Prod name" });
+
+        var controller = new ProductController(mockService.Object);
+
+        //Act
+        var result = await controller.GetById(1);
+
+        //Assert
+        var OkResult = Assert.IsType<OkObjectResult>(result.Result);
+        var product = Assert.IsType<Product>(OkResult.Value);
+        Assert.Equal("Prod name", product.Name);
+    } 
+
+    [Fact]
+    public async Task GetProductById_NotExisting_Returns_NotFound()
+    {
+        // Arrange
+        var mockService = new Mock<IProductService>();
+        mockService.Setup(ps => ps.GetByIdAsync(It.IsAny<int>()))
+            .ReturnsAsync((Product)null);
+
+        var controller = new ProductController(mockService.Object);
+
+        // Act
+        var result = await controller.GetById(999);
+
+        //Assert
+        Assert.IsType<NotFoundResult>(result.Result);
+    }
+}
+
+
+#endregion
+
+#region Integration Tests
 
 
 /********************************************************************
- *                  .Net Console application                        *
+ *                      Integration Tests (xUnit)                    *
  ********************************************************************/
 
 
-//use the dotnet utility from the command line.
 
-//To create a new .NET Core project enter at a command prompt the command (optionally add project name i.e. "WebAPIClient"): 
-//  dotnet new console
-//  dotnet new console --name WebAPIClient
-
-//To compile a .NET Core project enter at a command prompt the command: 
-//  dotnet build
-
-
-//To compile and execute a .NET Core project enter at a command prompt the command: 
-//  dotnet run
-
-
-
-
-
-
-
-/********************************************************************
- *                             Unit Tests                           *
- ********************************************************************/
+#endregion
