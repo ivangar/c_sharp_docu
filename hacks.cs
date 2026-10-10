@@ -118,6 +118,9 @@ int randomNumber = random.Next(100000, 999999); // 6-digit random ID
 // Thread-safe, No instantiation, Better randomness ✅
 int randomNum = Random.Shared.Next(100000, 999999);
 
+// double greater than or equal to 0.0 and less than 1.0
+double randomDouble = random.NextDouble();  // 0.15, 0.62, 0.999
+
 //Math library
 Math.Max(5, 3);
 Math.Pow(3, 2);
@@ -407,9 +410,10 @@ int[] copy2 = numArray2.ToArray();
 //Anonymous implicitely Typed array
 var anonArray = new object[] { new { name = "apple", diam = 4 }, new { name = "grape", diam = 1 } };
 
-// Create a jagged 2D array:
-int[][] twoD = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-int twoDval = twoD[1][2]; //6
+// A jagged (2D) array is an array whose elements are themselves arrays
+// Each inner array can have a different length
+int[][] twoD = [[1, 2, 3], [4, 5], [7, 8, 9, 10]];
+int twoDval = twoD[1][1]; //5
 
 // Rectangular 2D array
 int[,] rect = { {1,2}, {3,4} };
@@ -826,6 +830,12 @@ hashSet.SetEquals(set2);            //True if A and B contain exactly the same e
  *                          Loops & Iterators                       *
  ********************************************************************/
 
+
+/* 3 optional parts: initizalizer, condition, iterator*/
+for (int i = 0; i < 10; i++)
+{
+    Console.WriteLine(i); // body
+}
 
 foreach (var number in numbers)
 {
@@ -1925,6 +1935,14 @@ var result = Transform(delegateList, delegate(string s) { return s.Length; });
 //3. Lambda (most common in modern C#)
 var result = Transform(names, s => s.Length);
 
+// Example using delegate representing a parameterless function
+void ExecuteAndHandle(Func<double> operationFunc)
+{
+    var result = operationFunc();
+}
+
+ExecuteAndHandle(() => 3 * 5);
+
             // Event Handlers
 
 //Define a delegate method for the Subscribers (not needed anymore)
@@ -2547,6 +2565,17 @@ if (dog is Pet p)
 //old style explicit cast would be:
 var pet = (Pet)dog;  // Explicit cast
 
+// List pattern
+
+// match the shape and contents of an array or list directly in a pattern
+
+string[] parts = { "01", "MN", "L" };
+
+if (parts is [var typeCode, var colorCode, var sizeCode])
+    Console.WriteLine($"Type: {typeCode}, Color: {colorCode}, Size: {sizeCode}");
+else
+    Console.WriteLine("Unexpected format.");
+
 
 //The switch expression (modern C# style) using type patterns
 //Test for range of values using relational pattern and conjunctive patterns (and, or, not)
@@ -2686,6 +2715,22 @@ decimal nestedPattern = dog switch
         _ => 4.0m,
     }
 };
+
+// list pattern - switch expression
+
+// match the shape and contents of an array or list directly in a pattern
+int[] numbers = { 1, 2, 3 };
+
+string result = numbers switch
+{
+    [] => "Empty array",
+    [var x, var y] => $"exactly 2 elements: {x}, {y}",
+    [1, 2, 3] => "Exactly the sequence 1, 2, 3",
+    [var first, .., var last] => $"Starts with {first}, ends with {last}", // slice pattern
+};
+
+Console.WriteLine(result); // "Exactly the sequence 1, 2, 3"
+
 
 #endregion
 
@@ -2890,6 +2935,11 @@ bool TryGetPosition(string input, out DefaultPosition position)
     return Enum.TryParse<FileMode>(input, ignoreCase: true, out position);
 }
 
+// Check if the integer maps to a defined enum value
+var defined = Enum.IsDefined(typeof(FileMode), 3);
+
+// get the number of elements in an enum 
+int count = Enum.GetValues(typeof(Status)).Length;
 
 // print each of the enum string values
 foreach (var option in Enum.GetNames(typeof(FileMode)))
@@ -3102,7 +3152,7 @@ public class CalculatorTests
 
 public class CalculatorTests
 {
-    public static IEnumerable<object[]> DivisionCases =>
+    public static readonly IEnumerable<object[]> DivisionCases =>
         new List<object[]>
         {
             new object[]{ 10, 2, 5},
@@ -3114,7 +3164,7 @@ public class CalculatorTests
     public void Divide_ReturnsExpected(int a, int b, int expected)
     {
         var calculator = new Calculator();
-        var result = calculator.Add(a, b);
+        var result = calculator.Divide(a, b);
         Assert.Equal(expected, result);
     }
 }
@@ -3127,9 +3177,9 @@ Assert.NotEqual(a, b);
 Assert.True(condition);
 Assert.Null(obj);
 Assert.NotNull(obj);
+Assert.IsType<T>(obj);
 Assert.Contains(item, collection);
 Assert.Empty(collection);
-Assert.IsType<T>(obj);
 Assert.Throws<ArgumentNullException>(() => ServiceContainer.DoWork(null));
 await Assert.ThrowsAsync<InvalidOperationException>(() => service.DoWorkAsync());
 
@@ -3226,6 +3276,7 @@ public class OrderServiceTests
         mockRepo.Setup(r => r.SaveAsync(It.IsAny<Order>()))
             .ReturnsAsync(true);
 
+        // (sut) system under test
         var sut = new OrderService(mockRepo.Object);
         var order = new Order { Id = 1, Total = 100 };
 
@@ -3258,6 +3309,7 @@ public class ProductControllerTests
         //Assert
         var OkResult = Assert.IsType<OkObjectResult>(result.Result);
         var product = Assert.IsType<Product>(OkResult.Value);
+        mockService.Verify(ps => ps.GetByIdAsync(1), Times.Once);
         Assert.Equal("Prod name", product.Name);
     } 
 
@@ -3289,6 +3341,59 @@ public class ProductControllerTests
  *                      Integration Tests (xUnit)                    *
  ********************************************************************/
 
+
+
+#endregion
+
+#region SQLite
+
+/********************************************************************
+ *                                   SQLite                          *
+ ********************************************************************/
+/*using Microsoft.Data.Sqlite;*/
+
+// Open/Close an SQLite connection
+using (var connection = new SqliteConnection(@"Data Source=project_name.db"))
+{
+    connection.Open();
+    
+    // Creating an SQL command
+    var tableCmd = connection.CreateCommand();
+    tableCmd.CommandText = $"SELECT * FROM my_table ";
+
+    // Execute Query
+    SqliteDataReader reader = tableCmd.ExecuteReader();
+
+    // Connection close
+    connection.Close();
+}
+
+// GET All records
+if (reader.HasRows)
+{
+    while (reader.Read())
+    {
+        Console.WriteLine("{0}, {1}, {2}", reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2));
+    }
+}
+
+// POST
+var tableCmd = connection.CreateCommand();
+tableCmd.CommandText = $"INSERT INTO drinking_water(date, quantity) VALUES('{date}', {quantity})";
+
+tableCmd.ExecuteNonQuery();
+
+// DELETE
+var tableCmd = connection.CreateCommand();
+tableCmd.CommandText = $"DELETE from drinking_water WHERE Id = '{recordId}'";
+
+int rowCount = tableCmd.ExecuteNonQuery();
+
+//UPDATE
+var tableCmd = connection.CreateCommand();
+tableCmd.CommandText = $"UPDATE drinking_water SET date = '{date}', quantity = {quantity} WHERE Id = {recordId}";
+
+tableCmd.ExecuteNonQuery();
 
 
 #endregion

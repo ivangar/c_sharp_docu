@@ -559,7 +559,7 @@ MyApp.Console/
 
 
 
-#region EF DbContext
+#region DbContext
 
 /*****************************************************************************
  *                    Entity Framework DbContexts                            *
@@ -1076,7 +1076,7 @@ public class YourApiContext : DbContext
 
 
 
-#region EF WebAPI 
+#region WebAPI 
 
 /********************************************************************
  *                       ASP.NET Core Web API                        *
